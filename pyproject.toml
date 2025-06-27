@@ -1,0 +1,10 @@
+[project]
+name = "digest"
+version = "0.1.0"
+description = "A tool for extracting the signal from the noise."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "toml",
+    "requests",
+]

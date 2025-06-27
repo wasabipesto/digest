@@ -1,0 +1,29 @@
+# Configuration for the Manifund Project data source.
+
+# Path to the data loader to use.
+# Output must be in valid JSON printed to stdout.
+loader = "sources/manifund-projects/manifund-projects.py"
+
+introduction = """
+Today you will be evaluating a grant proposal from a site called Manifund. Projects from Manifund tend to be focused on maximizing charitable impact, addressing long-term risks, and being ready for the future. I have some money set aside to contribute to a few of these projects, and you will be helping me evaluate one such project.
+"""
+
+criteria = """
+As my assistant, you will now perform a thorough and insightful review of the grant proposal you just read.
+
+Some things that I prioritize for grant proposals like this include:
+- A potential mechanism for real societal good. Abstract or theoretical research is interesting but the best projects identify some way to translate their findings into real-world impact.
+- Lower funding thresholds. I don't have a massive amount of capital, so I would prefer to see projects where $1000 or less can make a significant impact.
+- Capital-effectiveness. All else being equal, I prefer projects that can achieve their goals with less capital.
+
+Some things to think about when evaluating this proposal:
+- Who is working on the project, and do they have enough experience to see it through? Have they led projects like this before? Do they have the knowledge, skills, or education to successfully complete the project?
+- For charitable projects, consider the cost-effectiveness per disability-adjusted life year (DALY). Try calculating the approximate cost per DALY to within a few orders of magnitude. You could construct this by thinking about the potential reach of the project, the potential impact per person, and the total cost of the project.
+- For technological projects, think about feasibility and timelines. Are there off-the-shelf parts the team can use to build prototypes? Do they need to do everything from scratch? Do they need to develop new processes before they can start on their goal?
+- Has the team already secured funding from other sources? Will the funding through this grant be used towards the primary goal?
+- How credible is the path to impact of this project? Will it be obvious that the project has succeeded? How would you be able to tell?
+- Has the team identified and addressed potential ways they could fail? What's the worst case situation in case they do not succeed?
+- What unintended side effects could the project have? What second-order effects could arise from the project, and how bad would they be compared to the potential positive outcomes?
+
+When you write your final report, I will know that it's a project on Manifund. No need to repeat that.
+"""
