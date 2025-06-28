@@ -25,7 +25,7 @@ Digest fetches data from configured sources, assembles prompts based on my inter
 ## Data Sources
 
 - [x] [Manifund Projects](https://manifund.org/)
-- [ ] FreshRSS Unread
+- [x] [FreshRSS Unread Items](https://github.com/FreshRSS/FreshRSS)
 - [ ] Kickstarter Projects
 - [ ] ProductHunt
 - [ ] Manifold Markets
@@ -44,21 +44,26 @@ Digest fetches data from configured sources, assembles prompts based on my inter
 ## Requirements
 
 - UV package manager
+- Just command runner (recommended)
 - Ollama running locally or accessible via network
 
 ## Installation
 
 1. Clone or download this project
-2. Install dependencies:
+2. Install dependencies & set up environment variables:
    ```bash
-   uv sync
+   just init
+   ```
+3. Run it:
+   ```bash
+   just run
    ```
 
 ## Configuration
 
 ### Environment Variables
 
-This file should be located at `.env`.
+Secrets and data loaders configuration variables are stored in environment variables. These are automatically loaded when found in `.env`.
 
 ### Base Configuration
 
@@ -96,10 +101,3 @@ Data loaders must:
      "input": { ... actual content to evaluate ... }
    }
    ```
-
-## Usage
-
-```bash
-just run # convenience runner
-uv run main.py # run manually
-```
