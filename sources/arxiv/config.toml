@@ -3,3 +3,7 @@
 # Path to the data loader to use.
 # Output must be in valid JSON printed to stdout.
 loader = "sources/arxiv/arxiv.py"
+
+introduction = """
+Today you will be evaluating a new paper from arXiv. The best papers are very interesting, with original research and well-thought out ideas. You will be able to read the abstract, and it is your job to determine if it would be worth my time to read the full paper.
+"""

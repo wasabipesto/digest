@@ -31,7 +31,7 @@ Digest fetches data from configured sources, assembles prompts based on my inter
 - [x] [FreshRSS Unread Items](https://github.com/FreshRSS/FreshRSS)
 - [ ] [Manifold Markets](https://manifold.markets)
 - [x] Manifold Comments
-- [ ] [Arxiv Papers](https://arxiv.org/)
+- [x] [Arxiv Papers](https://arxiv.org/)
 - [ ] [Kickstarter Projects](https://www.kickstarter.com/)
 - [ ] [ProductHunt](https://www.producthunt.com/)
 - [ ] [Reddit Posts](https://old.reddit.com)
