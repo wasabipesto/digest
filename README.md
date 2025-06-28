@@ -29,13 +29,14 @@ Digest fetches data from configured sources, assembles prompts based on my inter
 
 - [x] [Manifund Projects](https://manifund.org/)
 - [x] [FreshRSS Unread Items](https://github.com/FreshRSS/FreshRSS)
-- [ ] Kickstarter Projects
-- [ ] ProductHunt
-- [ ] Manifold Markets
-- [ ] Reddit Posts
+- [ ] [Manifold Markets](https://manifold.markets)
+- [x] Manifold Comments
+- [ ] [Arxiv Papers](https://arxiv.org/)
+- [ ] [Kickstarter Projects](https://www.kickstarter.com/)
+- [ ] [ProductHunt](https://www.producthunt.com/)
+- [ ] [Reddit Posts](https://old.reddit.com)
 - [ ] Discord Conversations
 - [ ] Twitter Conversations
-- [ ] Arxiv Papers
 - [ ] Email Inbox
 - [ ] Raw RSS Feed
 - [ ] GitHub Home Feed
