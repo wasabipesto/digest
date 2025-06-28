@@ -9,15 +9,17 @@ Digest fetches data from configured sources, assembles prompts based on my inter
 ## Features
 
 - [x] Easily add multiple data sources with their own configuration
-- [x] Start with a simple base configuration and refine with source-specific prompts
+  - [x] Start with a simple base configuration and refine with source-specific prompts
 - [x] Use any LLM through Ollama to evaluate content against your criteria
-- [x] Extract summaries, evaluations, and confidence scores
+  - [x] Extract summaries, evaluations, and confidence scores
 - [x] See all results in a simple web view
-- [x] Run single loaders at a time
-- [x] Gracefully handle data loader failures
-- [x] Cache the data to avoid unnecessary API calls
+  - [ ] Get it all wrapped up in a weekly email digest
+- [x] Advanced data handling
+  - [x] Run single loaders at a time
+  - [x] Gracefully handle data loader failures
+  - [x] Cache the data to avoid unnecessary API calls
 - [x] Run the evaluation many times and take a weighted average
-- [ ] Get it all wrapped up in a weekly email digest
+  - [ ] Get smarter about when to re-evaluate items
 - [ ] Have the LLM compare multiple items to build a ranked list
 - [ ] Enable image interpretation
 - [ ] Benchmark the results
