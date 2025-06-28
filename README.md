@@ -35,7 +35,7 @@ Digest fetches data from configured sources, assembles prompts based on my inter
 - [x] Manifold Comments
 - [x] [Arxiv Papers](https://arxiv.org/)
 - [ ] [Kickstarter Projects](https://www.kickstarter.com/)
-- [ ] [ProductHunt](https://www.producthunt.com/)
+- [x] [ProductHunt](https://www.producthunt.com/)
 - [ ] [Reddit Posts](https://old.reddit.com)
 - [ ] Discord Conversations
 - [ ] Twitter Conversations
