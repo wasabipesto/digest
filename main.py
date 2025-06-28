@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -10,6 +11,7 @@ import time
 from pathlib import Path
 import requests
 from typing import Dict, List, Any
+from datetime import datetime
 
 
 def load_base_config() -> Dict[str, Any]:
@@ -269,6 +271,13 @@ def main():
                 # Assemble the final prompt
                 prompt = assemble_prompt(merged_config, item)
                 item["prompt"] = prompt
+
+                # Calculate and store prompt hash
+                prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+                item["prompt_hash"] = prompt_hash
+
+                # Store timestamp
+                item["eval_date"] = datetime.now().isoformat()
 
                 # Run through ollama
                 response = call_ollama(prompt)
