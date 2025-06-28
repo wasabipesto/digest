@@ -11,6 +11,9 @@
 # Downloads comments and appends them to the project data
 # Formats the output correctly and prints to stdout
 
+# Uses the Manifund API, documented here:
+# https://manifund.org/docs
+
 import os
 import json
 import requests

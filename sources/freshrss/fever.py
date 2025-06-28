@@ -11,6 +11,9 @@
 # Downloads unread feed items from the FreshRSS Fever API
 # Formats the output correctly and prints to stdout
 
+# Uses the Fever API, documented here:
+# https://freshrss.github.io/FreshRSS/en/developers/06_Fever_API.html
+
 import os
 import json
 import requests
