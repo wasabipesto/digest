@@ -84,7 +84,7 @@ def merge_configs(
 
 def get_dedup_key(item: Dict[str, Any]) -> str:
     """Generate a deduplication key for this item"""
-    dedup_string = f"{item['title']}|{item['creation_date']}"
+    dedup_string = f"{item['source']}|{item['link']}"
     return hashlib.md5(dedup_string.encode("utf-8")).hexdigest()
 
 
@@ -184,8 +184,8 @@ def main():
         "--output",
         "-o",
         type=str,
-        default="raw_data.json",
-        help="Output file for collected data (default: raw_data.json)",
+        default="digest_results.json",
+        help="Output file for collected data (default: digest_results.json)",
     )
     args = parser.parse_args()
 

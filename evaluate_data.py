@@ -145,26 +145,10 @@ def call_ollama(prompt: str) -> Dict[str, Any]:
 
 def needs_evaluation(item: Dict[str, Any]) -> bool:
     """Check if an item needs evaluation"""
-    # Check if item has response
     if "response" not in item:
         return True
-
-    # Check if response has required fields
-    response = item["response"]
-    if not isinstance(response, dict):
-        return True
-
-    required_keys = {"summary", "evaluation", "importance_score", "confidence_score"}
-    if not required_keys.issubset(response.keys()):
-        return True
-
-    # Check if prompt has changed (if we have a stored prompt hash)
-    if "prompt_hash" in item and "prompt" in item:
-        current_prompt_hash = hashlib.sha256(item["prompt"].encode("utf-8")).hexdigest()
-        if current_prompt_hash != item["prompt_hash"]:
-            return True
-
-    return False
+    else:
+        return False
 
 
 def main():
@@ -174,8 +158,8 @@ def main():
         "--input",
         "-i",
         type=str,
-        default="raw_data.json",
-        help="Input file with collected data (default: raw_data.json)",
+        default="digest_results.json",
+        help="Input file with collected data (default: digest_results.json)",
     )
     parser.add_argument(
         "--output",
