@@ -12,8 +12,9 @@ Digest fetches data from configured sources, assembles prompts based on my inter
 - [x] Start with a simple base configuration and refine with source-specific prompts
 - [x] Use any LLM through Ollama to evaluate content against your criteria
 - [x] Extract summaries, evaluations, and confidence scores
-- [ ] Cache the data to avoid unnecessary API calls
+- [x] See all results in a simple web view
 - [ ] Get it all wrapped up in a weekly email digest
+- [ ] Cache the data to avoid unnecessary API calls
 - [ ] Run the evaluation many times and take a weighted average
 - [ ] Have the LLM compare multiple items to build a ranked list
 - [ ] Enable image interpretation
@@ -47,7 +48,7 @@ Digest fetches data from configured sources, assembles prompts based on my inter
 - Just command runner (recommended)
 - Ollama running locally or accessible via network
 
-## Installation
+## Installation & Usage
 
 1. Clone or download this project
 2. Install dependencies & set up environment variables:
@@ -58,6 +59,14 @@ Digest fetches data from configured sources, assembles prompts based on my inter
    ```bash
    just run
    ```
+
+### Viewing Results
+
+After running the digest, you can view the results in a simple web interface:
+
+```bash
+just web
+```
 
 ## Configuration
 

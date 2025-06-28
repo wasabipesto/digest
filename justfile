@@ -8,6 +8,12 @@ default:
 run:
     uv run main.py
 
+# Serve the web view
+web:
+    @if [ ! -f digest_results.json ]; then echo "Results missing! Run the loaders first."; exit 1; fi
+    @echo "Starting web server on http://localhost:8000"
+    python3 -m http.server -b localhost 8000
+
 # Initialize by installing deps and copying the env file
 init:
     uv sync

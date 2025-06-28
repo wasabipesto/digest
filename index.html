@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Digest Results</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    sans-serif;
+                line-height: 1.6;
+                color: #333;
+                background-color: #f8f9fa;
+                padding: 20px;
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+
+            h1 {
+                color: #2c3e50;
+                margin-bottom: 30px;
+                text-align: center;
+            }
+
+            .controls {
+                margin-bottom: 30px;
+                display: flex;
+                gap: 15px;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+
+            .controls select,
+            .controls button {
+                padding: 8px 12px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                background: white;
+                cursor: pointer;
+            }
+
+            .source-section {
+                margin-bottom: 40px;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                overflow: hidden;
+            }
+
+            .source-header {
+                background: #3498db;
+                color: white;
+                padding: 15px 20px;
+                font-size: 1.2em;
+                font-weight: bold;
+            }
+
+            .item {
+                border-bottom: 1px solid #eee;
+                padding: 20px;
+            }
+
+            .item:last-child {
+                border-bottom: none;
+            }
+
+            .item-header {
+                display: flex;
+                justify-content: between;
+                align-items: flex-start;
+                gap: 15px;
+                margin-bottom: 10px;
+            }
+
+            .item-title {
+                flex: 1;
+            }
+
+            .item-title h3 {
+                margin-bottom: 5px;
+            }
+
+            .item-title a {
+                color: #2980b9;
+                text-decoration: none;
+                font-size: 1.1em;
+            }
+
+            .item-title a:hover {
+                text-decoration: underline;
+            }
+
+            .scores {
+                display: flex;
+                gap: 15px;
+                flex-shrink: 0;
+            }
+
+            .score {
+                text-align: center;
+                min-width: 80px;
+            }
+
+            .score-value {
+                font-size: 1.5em;
+                font-weight: bold;
+                display: block;
+            }
+
+            .importance .score-value {
+                color: #e74c3c;
+            }
+
+            .confidence .score-value {
+                color: #27ae60;
+            }
+
+            .score-label {
+                font-size: 0.8em;
+                color: #666;
+                text-transform: uppercase;
+            }
+
+            .item-summary {
+                margin: 15px 0;
+                color: #555;
+                font-style: italic;
+            }
+
+            .expand-btn {
+                background: #ecf0f1;
+                border: none;
+                padding: 8px 15px;
+                border-radius: 4px;
+                cursor: pointer;
+                margin-top: 10px;
+                font-size: 0.9em;
+            }
+
+            .expand-btn:hover {
+                background: #d5dbdb;
+            }
+
+            .item-details {
+                display: none;
+                margin-top: 20px;
+                padding-top: 20px;
+                border-top: 1px solid #eee;
+            }
+
+            .item-details.visible {
+                display: block;
+            }
+
+            .detail-section {
+                margin-bottom: 25px;
+            }
+
+            .detail-section h4 {
+                color: #2c3e50;
+                margin-bottom: 10px;
+                font-size: 1.1em;
+            }
+
+            .detail-content {
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 4px;
+                border-left: 4px solid #3498db;
+                white-space: pre-wrap;
+                font-family: "Monaco", "Consolas", monospace;
+                font-size: 0.9em;
+                line-height: 1.4;
+                max-height: 300px;
+                overflow-y: auto;
+            }
+
+            .loading {
+                text-align: center;
+                padding: 50px;
+                color: #666;
+            }
+
+            .error {
+                text-align: center;
+                padding: 50px;
+                color: #e74c3c;
+            }
+
+            .stats {
+                display: flex;
+                gap: 30px;
+                margin-bottom: 30px;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .stat {
+                text-align: center;
+                background: white;
+                padding: 15px 25px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .stat-value {
+                font-size: 2em;
+                font-weight: bold;
+                color: #3498db;
+            }
+
+            .stat-label {
+                color: #666;
+                font-size: 0.9em;
+            }
+
+            @media (max-width: 768px) {
+                .item-header {
+                    flex-direction: column;
+                    gap: 10px;
+                }
+
+                .scores {
+                    align-self: flex-start;
+                }
+
+                .controls {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+
+                .controls select,
+                .controls button {
+                    width: 100%;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Digest Results</h1>
+
+            <div id="loading" class="loading">Loading digest results...</div>
+
+            <div id="error" class="error" style="display: none">
+                Error loading digest results. Make sure digest_results.json
+                exists and is valid JSON.
+            </div>
+
+            <div id="content" style="display: none">
+                <div class="stats" id="stats"></div>
+
+                <div
+                    id="lastUpdated"
+                    style="
+                        text-align: center;
+                        margin-bottom: 20px;
+                        color: #666;
+                        font-size: 0.9em;
+                    "
+                ></div>
+
+                <div class="controls">
+                    <select id="sortSelect">
+                        <option value="importance-desc">
+                            Sort by Importance (High to Low)
+                        </option>
+                        <option value="importance-asc">
+                            Sort by Importance (Low to High)
+                        </option>
+                        <option value="confidence-desc">
+                            Sort by Confidence (High to Low)
+                        </option>
+                        <option value="confidence-asc">
+                            Sort by Confidence (Low to High)
+                        </option>
+                        <option value="title">Sort by Title</option>
+                    </select>
+
+                    <select id="filterSelect">
+                        <option value="all">Show All Items</option>
+                        <option value="high-importance">
+                            High Importance (≥70)
+                        </option>
+                        <option value="medium-importance">
+                            Medium Importance (30-69)
+                        </option>
+                        <option value="low-importance">
+                            Low Importance (<30)
+                        </option>
+                    </select>
+
+                    <button id="expandAllBtn">Expand All</button>
+                    <button id="collapseAllBtn">Collapse All</button>
+                </div>
+
+                <div id="results"></div>
+            </div>
+        </div>
+
+        <script>
+            let allData = [];
+            let currentData = [];
+
+            // Load and display the data
+            async function loadData() {
+                try {
+                    const response = await fetch("digest_results.json");
+                    if (!response.ok) {
+                        throw new Error(
+                            `HTTP ${response.status}: ${response.statusText}`,
+                        );
+                    }
+                    allData = await response.json();
+                    currentData = [...allData];
+
+                    document.getElementById("loading").style.display = "none";
+                    document.getElementById("content").style.display = "block";
+
+                    displayLastUpdated();
+                    displayStats();
+                    displayResults();
+                } catch (error) {
+                    console.error("Error loading data:", error);
+                    document.getElementById("loading").style.display = "none";
+                    document.getElementById("error").style.display = "block";
+                }
+            }
+
+            // Display last updated timestamp
+            function displayLastUpdated() {
+                const lastUpdated = document.getElementById("lastUpdated");
+                const now = new Date().toLocaleString();
+                lastUpdated.innerHTML = `Last updated: ${now}`;
+            }
+
+            // Display overall statistics
+            function displayStats() {
+                const stats = document.getElementById("stats");
+                const totalItems = allData.length;
+                const sources = [
+                    ...new Set(allData.map((item) => item.source)),
+                ];
+                const avgImportance = Math.round(
+                    allData.reduce(
+                        (sum, item) => sum + item.response.importance_score,
+                        0,
+                    ) / totalItems,
+                );
+                const highImportance = allData.filter(
+                    (item) => item.response.importance_score >= 70,
+                ).length;
+
+                stats.innerHTML = `
+                <div class="stat">
+                    <div class="stat-value">${totalItems}</div>
+                    <div class="stat-label">Total Items</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${sources.length}</div>
+                    <div class="stat-label">Sources</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${avgImportance}</div>
+                    <div class="stat-label">Avg Importance</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${highImportance}</div>
+                    <div class="stat-label">High Importance</div>
+                </div>
+            `;
+            }
+
+            // Group data by source
+            function groupBySource(data) {
+                const grouped = {};
+                data.forEach((item) => {
+                    if (!grouped[item.source]) {
+                        grouped[item.source] = [];
+                    }
+                    grouped[item.source].push(item);
+                });
+                return grouped;
+            }
+
+            // Sort items based on selected criteria
+            function sortItems(items, sortBy) {
+                const sorted = [...items];
+                switch (sortBy) {
+                    case "importance-desc":
+                        return sorted.sort(
+                            (a, b) =>
+                                b.response.importance_score -
+                                a.response.importance_score,
+                        );
+                    case "importance-asc":
+                        return sorted.sort(
+                            (a, b) =>
+                                a.response.importance_score -
+                                b.response.importance_score,
+                        );
+                    case "confidence-desc":
+                        return sorted.sort(
+                            (a, b) =>
+                                b.response.confidence_score -
+                                a.response.confidence_score,
+                        );
+                    case "confidence-asc":
+                        return sorted.sort(
+                            (a, b) =>
+                                a.response.confidence_score -
+                                b.response.confidence_score,
+                        );
+                    case "title":
+                        return sorted.sort((a, b) =>
+                            a.title.localeCompare(b.title),
+                        );
+                    default:
+                        return sorted;
+                }
+            }
+
+            // Filter items based on selected criteria
+            function filterItems(items, filterBy) {
+                switch (filterBy) {
+                    case "high-importance":
+                        return items.filter(
+                            (item) => item.response.importance_score >= 70,
+                        );
+                    case "medium-importance":
+                        return items.filter(
+                            (item) =>
+                                item.response.importance_score >= 30 &&
+                                item.response.importance_score < 70,
+                        );
+                    case "low-importance":
+                        return items.filter(
+                            (item) => item.response.importance_score < 30,
+                        );
+                    case "all":
+                    default:
+                        return items;
+                }
+            }
+
+            // Display the results
+            function displayResults() {
+                const resultsDiv = document.getElementById("results");
+                const sortBy = document.getElementById("sortSelect").value;
+                const filterBy = document.getElementById("filterSelect").value;
+
+                // Apply filtering and sorting
+                let filteredData = filterItems(currentData, filterBy);
+                const groupedData = groupBySource(filteredData);
+
+                let html = "";
+
+                // Sort sources by name
+                const sourceNames = Object.keys(groupedData).sort();
+
+                sourceNames.forEach((sourceName) => {
+                    const items = sortItems(groupedData[sourceName], sortBy);
+
+                    html += `
+                    <div class="source-section">
+                        <div class="source-header">
+                            ${sourceName} (${items.length} items)
+                        </div>
+                `;
+
+                    items.forEach((item, index) => {
+                        const itemId = `item-${sourceName.replace(/\s+/g, "-")}-${index}`;
+                        html += createItemHtml(item, itemId);
+                    });
+
+                    html += "</div>";
+                });
+
+                if (html === "") {
+                    html =
+                        '<div class="error">No items match the current filters.</div>';
+                }
+
+                resultsDiv.innerHTML = html;
+            }
+
+            // Create HTML for a single item
+            function createItemHtml(item, itemId) {
+                const summary = item.response.summary || "No summary available";
+                const evaluation =
+                    item.response.evaluation || "No evaluation available";
+                const scratchpad =
+                    item.response.scratchpad || "No scratchpad available";
+                const followup =
+                    item.response.followup || "No followup available";
+
+                return `
+                <div class="item">
+                    <div class="item-header">
+                        <div class="item-title">
+                            <h3><a href="${item.link}" target="_blank">${item.title}</a></h3>
+                        </div>
+                        <div class="scores">
+                            <div class="score importance">
+                                <span class="score-value">${item.response.importance_score}</span>
+                                <span class="score-label">Importance</span>
+                            </div>
+                            <div class="score confidence">
+                                <span class="score-value">${item.response.confidence_score}</span>
+                                <span class="score-label">Confidence</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="item-summary">
+                        ${summary.substring(0, 1000)}${summary.length > 1000 ? "..." : ""}
+                    </div>
+
+                    <button class="expand-btn" onclick="toggleDetails('${itemId}')">
+                        Show Details
+                    </button>
+
+                    <div id="${itemId}" class="item-details">
+                        <div class="detail-section">
+                            <h4>Summary</h4>
+                            <div class="detail-content">${summary}</div>
+                        </div>
+
+                        <div class="detail-section">
+                            <h4>Evaluation</h4>
+                            <div class="detail-content">${evaluation}</div>
+                        </div>
+
+                        <div class="detail-section">
+                            <h4>Scratchpad</h4>
+                            <div class="detail-content">${scratchpad}</div>
+                        </div>
+
+                        ${
+                            followup
+                                ? `
+                        <div class="detail-section">
+                            <h4>Followup</h4>
+                            <div class="detail-content">${followup}</div>
+                        </div>
+                        `
+                                : ""
+                        }
+
+                        <div class="detail-section">
+                            <h4>Raw Input</h4>
+                            <div class="detail-content">${JSON.stringify(item.input, null, 2)}</div>
+                        </div>
+
+                        <div class="detail-section">
+                            <h4>Full Prompt</h4>
+                            <div class="detail-content">${item.prompt}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }
+
+            // Toggle details visibility
+            function toggleDetails(itemId) {
+                const details = document.getElementById(itemId);
+                const button = details.previousElementSibling;
+
+                if (details.classList.contains("visible")) {
+                    details.classList.remove("visible");
+                    button.textContent = "Show Details";
+                } else {
+                    details.classList.add("visible");
+                    button.textContent = "Hide Details";
+                }
+            }
+
+            // Expand all details
+            function expandAll() {
+                const details = document.querySelectorAll(".item-details");
+                const buttons = document.querySelectorAll(".expand-btn");
+
+                details.forEach((detail) => detail.classList.add("visible"));
+                buttons.forEach(
+                    (button) => (button.textContent = "Hide Details"),
+                );
+            }
+
+            // Collapse all details
+            function collapseAll() {
+                const details = document.querySelectorAll(".item-details");
+                const buttons = document.querySelectorAll(".expand-btn");
+
+                details.forEach((detail) => detail.classList.remove("visible"));
+                buttons.forEach(
+                    (button) => (button.textContent = "Show Details"),
+                );
+            }
+
+            // Event listeners
+            document
+                .getElementById("sortSelect")
+                .addEventListener("change", displayResults);
+            document
+                .getElementById("filterSelect")
+                .addEventListener("change", displayResults);
+            document
+                .getElementById("expandAllBtn")
+                .addEventListener("click", expandAll);
+            document
+                .getElementById("collapseAllBtn")
+                .addEventListener("click", collapseAll);
+
+            // Load data when page loads
+            loadData();
+        </script>
+    </body>
+</html>
