@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import json
 import os
 import subprocess
@@ -183,6 +184,15 @@ def call_ollama(prompt: str) -> str:
 
 def main():
     """Main function that orchestrates the entire process"""
+    parser = argparse.ArgumentParser(description="Process digest sources")
+    parser.add_argument(
+        "--source",
+        "-s",
+        type=str,
+        help="Process only the specified source (optional)",
+    )
+    args = parser.parse_args()
+
     print("Starting digest processing...")
 
     try:
@@ -194,11 +204,29 @@ def main():
         print("Finding source configurations...")
         source_config_paths = find_source_configs()
 
+        # Filter by specified source if provided
+        if args.source:
+            source_config_paths = [
+                path for path in source_config_paths if path.parent.name == args.source
+            ]
+            if not source_config_paths:
+                print(f"Source '{args.source}' not found.")
+                print("Available sources:")
+                all_source_names = [
+                    config_path.parent.name for config_path in find_source_configs()
+                ]
+                for source_name in all_source_names:
+                    print(f"  {source_name}")
+                return
+
         if len(source_config_paths) > 0:
             source_names = [
                 config_path.parent.name for config_path in source_config_paths
             ]
-            print(f"Found source configurations {', '.join(source_names)}.")
+            if args.source:
+                print(f"Processing specified source: {args.source}")
+            else:
+                print(f"Found source configurations {', '.join(source_names)}.")
         else:
             print("No source configurations found.")
             return

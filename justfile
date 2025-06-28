@@ -8,6 +8,10 @@ default:
 run:
     uv run main.py
 
+# Run the digest with one loader
+run-one source:
+    uv run main.py --source {{source}}
+
 # Serve the web view
 web:
     @if [ ! -f digest_results.json ]; then echo "Results missing! Run the loaders first."; exit 1; fi

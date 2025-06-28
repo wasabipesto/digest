@@ -13,6 +13,8 @@ Digest fetches data from configured sources, assembles prompts based on my inter
 - [x] Use any LLM through Ollama to evaluate content against your criteria
 - [x] Extract summaries, evaluations, and confidence scores
 - [x] See all results in a simple web view
+- [x] Run single loaders at a time
+- [ ] Gracefully handle data loader failures
 - [ ] Get it all wrapped up in a weekly email digest
 - [ ] Cache the data to avoid unnecessary API calls
 - [ ] Run the evaluation many times and take a weighted average
