@@ -116,27 +116,69 @@ def call_ollama(prompt: str) -> str:
     ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     ollama_model = os.getenv("OLLAMA_MODEL", "llama3.2")
 
-    try:
-        response = requests.post(
-            f"{ollama_base_url}/api/generate",
-            json={
-                "model": ollama_model,
-                "prompt": prompt,
-                "format": "json",
-                "stream": False,
-            },
-            timeout=300,
-        )
-        response.raise_for_status()
+    required_keys = {"summary", "evaluation", "importance_score", "confidence_score"}
+    max_retries = 3
 
-        result = response.json()
-        response = result["response"]
-        response_json = json.loads(response)
-        return response_json
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(
+                f"{ollama_base_url}/api/generate",
+                json={
+                    "model": ollama_model,
+                    "prompt": prompt,
+                    "format": "json",
+                    "stream": False,
+                },
+                timeout=300,
+            )
+            response.raise_for_status()
 
-    except requests.exceptions.RequestException as e:
-        print(f"Error calling ollama: {e}", file=sys.stderr)
-        return f"Error: Failed to get response from ollama - {str(e)}"
+            result = response.json()
+            response = result["response"]
+            response_json = json.loads(response)
+
+            # Check if response has all required keys
+            if isinstance(response_json, dict) and required_keys.issubset(
+                response_json.keys()
+            ):
+                return response_json
+            else:
+                missing_keys = required_keys - set(
+                    response_json.keys() if isinstance(response_json, dict) else []
+                )
+                print(
+                    f"Attempt {attempt + 1}: Missing required keys in response: {missing_keys}",
+                    file=sys.stderr,
+                )
+                if attempt == max_retries - 1:
+                    print(
+                        f"Failed to get valid response after {max_retries} attempts",
+                        file=sys.stderr,
+                    )
+                    sys.exit(1)
+
+        except requests.exceptions.RequestException as e:
+            print(f"Attempt {attempt + 1}: Error calling ollama: {e}", file=sys.stderr)
+            if attempt == max_retries - 1:
+                print(
+                    f"Failed to get response from ollama after {max_retries} attempts - {str(e)}",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+        except json.JSONDecodeError as e:
+            print(
+                f"Attempt {attempt + 1}: Error parsing JSON response: {e}",
+                file=sys.stderr,
+            )
+            if attempt == max_retries - 1:
+                print(
+                    f"Failed to parse JSON response after {max_retries} attempts - {str(e)}",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+
+    print("Unexpected error in call_ollama", file=sys.stderr)
+    sys.exit(1)
 
 
 def main():
