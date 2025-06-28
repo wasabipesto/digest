@@ -194,7 +194,12 @@ def main():
         print("Finding source configurations...")
         source_config_paths = find_source_configs()
 
-        if not source_config_paths:
+        if len(source_config_paths) > 0:
+            source_names = [
+                config_path.parent.name for config_path in source_config_paths
+            ]
+            print(f"Found source configurations {', '.join(source_names)}.")
+        else:
             print("No source configurations found.")
             return
 
@@ -228,7 +233,7 @@ def main():
             # Step 4 & 5: Assemble prompt and run through ollama for each item
             for i, item in enumerate(data_items):
                 print(
-                    f"  Processing item {i + 1}/{len(data_items)}: {item.get('title', 'Untitled')}"
+                    f"  Processing item {i + 1}/{len(data_items)}: {item['title']}",
                 )
 
                 # Assemble the final prompt
@@ -238,6 +243,9 @@ def main():
                 # Run through ollama
                 response = call_ollama(prompt)
                 item["response"] = response
+                print(
+                    f"    Score: {item['response']['importance_score']}, Confidence: {item['response']['confidence_score']}"
+                )
 
                 # Save to final array
                 all_results.append(item)
@@ -251,17 +259,6 @@ def main():
             json.dump(all_results, f, indent=2)
 
         print(f"Results saved to {output_file}")
-
-        # Print summary
-        print("\nSummary:")
-        for item in all_results:
-            print(f"- [{item['source']}] {item.get('title', 'Untitled')}")
-            if "link" in item:
-                print(f"  Link: {item['link']}")
-            print(
-                f"  Score: {item['response'].get('importance_score', 'ERR')}, Confidence {item['response'].get('confidence_score', 'ERR')}"
-            )
-            print()
 
     except Exception as e:
         print(f"Error in main: {e}", file=sys.stderr)
