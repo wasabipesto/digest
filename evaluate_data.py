@@ -242,11 +242,10 @@ def main():
                 prompt = assemble_prompt(config, item)
                 item["prompt"] = prompt
 
-                # Calculate and store prompt hash
+                # Calculate and store some eval data
                 prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+                item["model"] = os.getenv("OLLAMA_MODEL", "llama3.2")
                 item["prompt_hash"] = prompt_hash
-
-                # Store evaluation timestamp
                 item["eval_date"] = datetime.now().isoformat()
 
                 # Run through ollama
@@ -254,10 +253,13 @@ def main():
                 item["response"] = response
                 evaluated_count += 1
 
+                # Print results and save
                 print(
-                    f"  Score: {item['response']['importance_score']}, "
-                    f"Confidence: {item['response']['confidence_score']}"
+                    f" Score: {item['response']['importance_score']},"
+                    f" Confidence: {item['response']['confidence_score']}"
                 )
+                with open(args.output, "w") as f:
+                    json.dump(all_items, f, indent=2)
 
             except Exception as e:
                 print(f"  Error evaluating item: {e}", file=sys.stderr)
@@ -266,7 +268,7 @@ def main():
 
         print(f"\nSuccessfully evaluated {evaluated_count} items")
 
-        # Save results
+        # Final save
         print(f"Saving results to {args.output}...")
         with open(args.output, "w") as f:
             json.dump(all_items, f, indent=2)
