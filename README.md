@@ -16,8 +16,8 @@ Digest fetches data from configured sources, assembles prompts based on my inter
 - [x] Run single loaders at a time
 - [x] Gracefully handle data loader failures
 - [x] Cache the data to avoid unnecessary API calls
+- [x] Run the evaluation many times and take a weighted average
 - [ ] Get it all wrapped up in a weekly email digest
-- [ ] Run the evaluation many times and take a weighted average
 - [ ] Have the LLM compare multiple items to build a ranked list
 - [ ] Enable image interpretation
 - [ ] Benchmark the results

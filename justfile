@@ -27,9 +27,9 @@ evaluate:
 evaluate-force:
     uv run evaluate_data.py --force
 
-# Step 2: Evaluate with limit (useful for testing)
-evaluate-limit count:
-    uv run evaluate_data.py --limit {{count}}
+# Step 2: Evaluate indefinitely
+evaluate-forever:
+    uv run evaluate_data.py --rounds inf
 
 # Complete workflow: collect then evaluate
 workflow: collect evaluate
