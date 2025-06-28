@@ -7,6 +7,7 @@ import os
 import sys
 import time
 import toml
+import numpy as np
 from pathlib import Path
 import requests
 from typing import Dict, List, Any
@@ -145,10 +146,24 @@ def call_ollama(prompt: str) -> Dict[str, Any]:
 
 def needs_evaluation(item: Dict[str, Any]) -> bool:
     """Check if an item needs evaluation"""
-    if "response" not in item:
-        return True
-    else:
-        return False
+    return item["num_evals"] < 1
+
+
+def weighted_score(evals: List[Dict[str, Any]]) -> float:
+    """Aggregate a weighted score from evaluations"""
+    total_score = 0
+    total_weight = 0
+    for eval in evals:
+        i_score = eval["response"]["importance_score"]
+        i_weight = eval["response"]["confidence_score"] + 100
+        total_score += i_score * i_weight
+        total_weight += i_weight
+    return int(total_score / total_weight) if total_weight > 0 else 0
+
+
+def median_confidence(evals: List[Dict[str, Any]]) -> float:
+    """Aggregate a median confidence score from evaluations"""
+    return int(np.median([e["response"]["confidence_score"] for e in evals]))
 
 
 def main():
@@ -216,6 +231,9 @@ def main():
             print(f"Evaluating item {i + 1}/{len(items_to_evaluate)}: {item['title']}")
 
             try:
+                # Initialize the eval data
+                eval = {}
+
                 # Get the item's source configuration
                 source_config = load_source_config(item["config_path"])
 
@@ -224,23 +242,31 @@ def main():
 
                 # Assemble the prompt
                 prompt = assemble_prompt(config, item)
-                item["prompt"] = prompt
+                eval["prompt"] = prompt
 
                 # Calculate and store some eval data
                 prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
-                item["model"] = os.getenv("OLLAMA_MODEL", "llama3.2")
-                item["prompt_hash"] = prompt_hash
-                item["eval_date"] = datetime.now().isoformat()
+                eval["model"] = os.getenv("OLLAMA_MODEL", "llama3.2")
+                eval["prompt_hash"] = prompt_hash
+                eval["eval_date"] = datetime.now().isoformat()
 
                 # Run through ollama
                 response = call_ollama(prompt)
-                item["response"] = response
+                eval["response"] = response
                 evaluated_count += 1
+
+                # Save and aggregate evals so far
+                item["evals"].append(eval)
+                item["num_evals"] += 1
+                item["weighted_score"] = weighted_score(item["evals"])
+                item["median_confidence"] = median_confidence(item["evals"])
+                item["last_eval"] = eval["eval_date"]
 
                 # Print results and save
                 print(
-                    f" Score: {item['response']['importance_score']},"
-                    f" Confidence: {item['response']['confidence_score']}"
+                    f" Score: {eval['response']['importance_score']},"
+                    f" Confidence: {eval['response']['confidence_score']},"
+                    f" Cumulative Score: {item['weighted_score']}"
                 )
                 with open(args.output, "w") as f:
                     json.dump(all_items, f, indent=2)
