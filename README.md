@@ -85,7 +85,7 @@ Then configuration file for each source must be named `config.toml`.
 
 The only required key is `loader`, which must point to an executable data loader, described below.
 
-Optionally, you can overwrite any of the prompt segments defined in the base configuration
+Optionally, you can overwrite any of the prompt segments defined in the base configuration by using the same keys.
 
 ### Data Loader
 
