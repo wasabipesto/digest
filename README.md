@@ -14,9 +14,9 @@ Digest fetches data from configured sources, assembles prompts based on my inter
 - [x] Extract summaries, evaluations, and confidence scores
 - [x] See all results in a simple web view
 - [x] Run single loaders at a time
-- [ ] Gracefully handle data loader failures
+- [x] Gracefully handle data loader failures
+- [x] Cache the data to avoid unnecessary API calls
 - [ ] Get it all wrapped up in a weekly email digest
-- [ ] Cache the data to avoid unnecessary API calls
 - [ ] Run the evaluation many times and take a weighted average
 - [ ] Have the LLM compare multiple items to build a ranked list
 - [ ] Enable image interpretation
@@ -58,10 +58,30 @@ Digest fetches data from configured sources, assembles prompts based on my inter
    ```bash
    just init
    ```
-3. Run it:
+3. Run the two-step workflow:
    ```bash
-   just run
+   # Step 1: Collect data from all sources
+   just collect
+
+   # Step 2: Evaluate collected data with LLM
+   just evaluate
+
+   # Or run both steps together
+   just workflow
    ```
+
+### Advanced Usage
+
+```bash
+# Collect data from a specific source only
+just collect-one arxiv
+
+# Force re-evaluation of all items (ignores existing evaluations)
+just evaluate-force
+
+# Evaluate only a limited number of items (useful for testing)
+just evaluate-limit 10
+```
 
 ### Viewing Results
 
@@ -70,6 +90,24 @@ After running the digest, you can view the results in a simple web interface:
 ```bash
 just web
 ```
+
+## Two-Step Workflow
+
+Digest now uses a two-step workflow for better efficiency and reliability:
+
+### Step 1: Data Collection (`just collect`)
+
+- Runs all configured data loaders
+- Collects raw data from sources
+- Merges with existing data, preserving evaluations
+- Saves to `raw_data.json`
+
+### Step 2: Evaluation (`just evaluate`)
+
+- Loads collected data from `raw_data.json`
+- Identifies items needing LLM evaluation
+- Assembles prompts and calls Ollama
+- Saves final results to `digest_results.json`
 
 ## Configuration
 
@@ -93,7 +131,7 @@ Each source has its own directory under `sources/` with the following items.
 
 ### Configuration File
 
-Then configuration file for each source must be named `config.toml`.
+The configuration file for each source must be named `config.toml`.
 
 The only required key is `loader`, which must point to an executable data loader, described below.
 
