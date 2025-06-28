@@ -108,7 +108,22 @@ def call_ollama(prompt: str) -> Dict[str, Any]:
             if isinstance(response_json, dict) and required_keys.issubset(
                 response_json.keys()
             ):
+                if not isinstance(response_json["importance_score"], int):
+                    print(
+                        f"Attempt {attempt + 1}: Importance score ({response_json['importance_score']}) should be a number",
+                        file=sys.stderr,
+                    )
+                    continue
+                if not isinstance(response_json["confidence_score"], int):
+                    print(
+                        f"Attempt {attempt + 1}: Confidence score ({response_json['confidence_score']}) should be a number",
+                        file=sys.stderr,
+                    )
+                    continue
+
+                # All keys are present and numbers are numbers
                 return response_json
+
             else:
                 missing_keys = required_keys - set(
                     response_json.keys() if isinstance(response_json, dict) else []
