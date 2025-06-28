@@ -26,27 +26,36 @@ import tiptapy
 from bs4 import BeautifulSoup
 
 
-def keep_item(item, cutoff_date):
+def get_date(item):
+    """Get the item's creation date."""
+    if "created_time" in item:
+        return datetime.fromisoformat(item["created_time"]).replace(tzinfo=UTC)
+    elif "createdTime" in item:
+        return datetime.fromtimestamp(item["createdTime"] // 1000).replace(tzinfo=UTC)
+    else:
+        print("No date found")
+
+
+def filter_by_date(item):
     """Keep items that are newer than the cutoff date."""
-    return (
-        datetime.fromisoformat(item["created_time"]).replace(tzinfo=UTC) > cutoff_date
-    )
+    lookback_days = int(os.getenv("LOOKBACK_DAYS", 7))
+    cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
+    return get_date(item) > cutoff_date
 
 
 def get_comments():
-    """Get comments from Manifold's database with a minimum number of likes."""
+    """
+    Get comments from Manifold's database with a minimum number of likes.
+    Manifold comments API doesn't allow filtering by likes so we use the Supabase connection instead.
+    """
     min_likes = 15
-    lookback_days = int(os.getenv("LOOKBACK_DAYS", 7))
-    cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
-
-    # Manifold comments API doesn't allow filtering by likes so we use the Supabase connection instead
     supabase_anon_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4aWRyZ2thdHVtbHZmcWF4Y2xsIiwicm9sZSI6ImFub24iLCJpYXQiOjE2Njg5OTUzOTgsImV4cCI6MTk4NDU3MTM5OH0.d_yYtASLzAoIIGdXUBIgRAGLBnNow7JG2SoaNMQ8ySg"
     all_items = requests.get(
         "https://pxidrgkatumlvfqaxcll.supabase.co/rest/v1/contract_comments",
         params={"likes": f"gte.{min_likes}"},
         headers={"apikey": supabase_anon_key},
     ).json()
-    return [i for i in all_items if keep_item(i, cutoff_date)]
+    return [i for i in all_items if filter_by_date(i)]
 
 
 def get_link(comment):
@@ -145,6 +154,7 @@ if __name__ == "__main__":
             "source": "Manifold Comments",
             "title": f"Comment by {comment['userName']} on {comment['contractQuestion']}",
             "link": get_link(comment),
+            "creation_date": get_date(comment).isoformat(),
             "input": comment,
         }
         for comment in comments

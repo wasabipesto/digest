@@ -182,6 +182,7 @@ if __name__ == "__main__":
             "source": "Arxiv",
             "title": f"{paper['title']} by {paper['author']}",
             "link": paper["url"],
+            "creation_date": paper["submitted_date"],
             "input": paper,
         }
         for paper in papers

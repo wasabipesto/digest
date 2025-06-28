@@ -21,8 +21,18 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta, UTC
 
 
-def interpret_date(date_str):
-    return datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=UTC)
+def get_date(item):
+    """Get the item's creation date."""
+    return datetime.strptime(item["created_at"], "%Y-%m-%dT%H:%M:%S.%fZ").replace(
+        tzinfo=UTC
+    )
+
+
+def filter_by_date(item):
+    lookback_days = int(os.getenv("LOOKBACK_DAYS", 7))
+    cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
+    item_date = get_date(item)
+    return item_date > cutoff_date
 
 
 # Generic function to get recent items from Manifund API
@@ -61,10 +71,10 @@ def get_recent_items(endpoint):
         oldest_item_date = None
 
         for item in batch_items:
-            item_date = interpret_date(item.get("created_at"))
-            if item_date > cutoff_date:
+            if filter_by_date(item):
                 filtered_items.append(item)
             # Track the oldest item date for pagination
+            item_date = get_date(item)
             if oldest_item_date is None or item_date < oldest_item_date:
                 oldest_item_date = item_date
 
@@ -111,6 +121,7 @@ if __name__ == "__main__":
             "source": "Manifund",
             "title": f"{project['title']} by {project['profiles']['full_name']}",
             "link": f"https://manifund.org/projects/{project['slug']}",
+            "creation_date": get_date(project).isoformat(),
             "input": project,
         }
         for project in projects

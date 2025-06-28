@@ -23,19 +23,21 @@ import itertools
 from bs4 import BeautifulSoup
 
 
-def keep_item(item, cutoff_date):
+def get_date(item):
+    """Get the item's creation date."""
+    return datetime.fromtimestamp(item["created_on_time"], UTC)
+
+
+def filter_by_date(item):
     """Keep items that are unread and newer than the cutoff date."""
-    return (
-        datetime.fromtimestamp(item["created_on_time"], UTC) > cutoff_date
-        and item["is_read"] == 0
-    )
+    lookback_days = int(os.getenv("LOOKBACK_DAYS", 7))
+    cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
+    return get_date(item) > cutoff_date and item["is_read"] == 0
 
 
 def get_recent_unread_feed_items():
     fever_base_url = os.getenv("FEVER_API_BASE")
     fever_api_key = os.getenv("FEVER_API_KEY")
-    lookback_days = int(os.getenv("LOOKBACK_DAYS", 7))
-    cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
 
     unread_item_ids = (
         requests.post(
@@ -64,7 +66,7 @@ def get_recent_unread_feed_items():
         )
         all_items.extend(items)
 
-    return [i for i in all_items if keep_item(i, cutoff_date)]
+    return [i for i in all_items if filter_by_date(i)]
 
 
 def clean_html(input):
@@ -85,6 +87,7 @@ if __name__ == "__main__":
                 "source": "FreshRSS",
                 "title": f"{item['title']} by {item['author']}",
                 "link": item["url"],
+                "creation_date": get_date(item).isoformat(),
                 "input": item,
             }
         )
