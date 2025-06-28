@@ -96,8 +96,8 @@ def assemble_prompt(config: Dict[str, Any], item: Dict[str, Any]) -> str:
         prompt_parts.append(config["container_pre"])
 
     # Add the actual input content
-    input_content = item.get("input", item)
-    prompt_parts.append(json.dumps(input_content))
+    prompt_parts.append(item["title"])
+    prompt_parts.append(item["input"])
 
     if "container_post" in config:
         prompt_parts.append(config["container_post"])
