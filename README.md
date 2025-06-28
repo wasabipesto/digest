@@ -60,29 +60,30 @@ Digest fetches data from configured sources, assembles prompts based on my inter
    ```bash
    just init
    ```
-3. Run the two-step workflow:
+3. Edit your prompts to taste:
    ```bash
-   # Step 1: Collect data from all sources
-   just collect
-
-   # Step 2: Evaluate collected data with LLM
-   just evaluate
-
-   # Or run both steps together
+   nano sources/base.toml
+   nano sources/arxiv/config.toml
+   ```
+4. Run the full workflow:
+   ```bash
    just workflow
    ```
 
 ### Advanced Usage
 
 ```bash
+# Step 1: Collect data from all sources
+just collect
+
 # Collect data from a specific source only
 just collect-one arxiv
 
-# Force re-evaluation of all items (ignores existing evaluations)
-just evaluate-force
+# Step 2: Evaluate collected data with LLM
+just evaluate
 
-# Evaluate only a limited number of items (useful for testing)
-just evaluate-limit 10
+# Evaluate indefinitely
+just evaluate-forever
 ```
 
 ### Viewing Results
@@ -150,6 +151,7 @@ Data loaders must:
      "source": "Source Name",
      "title": "Item Title",
      "link": "https://example.com/item",
+     "creation_date": "2024-13-32T19:16:33+00:00",
      "input": { ... actual content to evaluate ... }
    }
    ```

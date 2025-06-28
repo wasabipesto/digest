@@ -9,7 +9,7 @@ init:
     uv sync
     @if [ -f .env ]; then echo ".env file already exists!"; exit 1; fi
     cp .env.example .env
-    nano .env
+    $EDITOR .env; or nano .env
 
 # Step 1: Collect data from all sources
 collect:
@@ -22,10 +22,6 @@ collect-one source:
 # Step 2: Evaluate collected data with LLM
 evaluate:
     uv run evaluate_data.py
-
-# Step 2: Force re-evaluation of all items
-evaluate-force:
-    uv run evaluate_data.py --force
 
 # Step 2: Evaluate indefinitely
 evaluate-forever:
