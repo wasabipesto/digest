@@ -2,6 +2,7 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
+#     "dotenv",
 #     "requests",
 # ]
 # ///
@@ -10,130 +11,106 @@
 # Downloads comments and appends them to the project data
 # Formats the output correctly and prints to stdout
 
+import os
 import json
 import requests
-from datetime import datetime, timedelta
+from dotenv import load_dotenv
+from datetime import datetime, timedelta, UTC
 
 
 def interpret_date(date_str):
-    return datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+    return datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=UTC)
 
 
-# Get projects from Manifund API created within the last n days
-def get_recent_projects(lookback_days):
-    recent_projects = []
+# Generic function to get recent items from Manifund API
+def get_recent_items(endpoint):
+    """
+    Fetch items from a Manifund API endpoint created within the last n days.
+
+    Args:
+        endpoint: API endpoint name (e.g., 'projects', 'comments')
+        lookback_days: Number of days to look back
+
+    Returns:
+        List of items matching the date criteria
+    """
+    recent_items = []
     before_param = None
-    cutoff_date = datetime.now() - timedelta(days=lookback_days)
+    lookback_days = int(os.getenv("LOOKBACK_DAYS", 7))
+    cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
 
     while True:
         # Build URL with optional before parameter
-        url = "https://manifund.org/api/v0/projects"
+        url = f"https://manifund.org/api/v0/{endpoint}"
         if before_param:
             url += f"?before={before_param}"
 
         response = requests.get(url)
         response.raise_for_status()
-        batch_projects = response.json()
+        batch_items = response.json()
 
-        # If no projects returned, we're done
-        if not batch_projects:
+        # If no items returned, we're done
+        if not batch_items:
             break
 
-        # Filter projects to only include those within our date range
-        filtered_projects = []
-        oldest_project_date = None
+        # Filter items to only include those within our date range
+        filtered_items = []
+        oldest_item_date = None
 
-        for project in batch_projects:
-            project_date = interpret_date(project.get("created_at"))
-            if project_date > cutoff_date:
-                filtered_projects.append(project)
-            # Track the oldest project date for pagination
-            if oldest_project_date is None or project_date < oldest_project_date:
-                oldest_project_date = project_date
+        for item in batch_items:
+            item_date = interpret_date(item.get("created_at"))
+            if item_date > cutoff_date:
+                filtered_items.append(item)
+            # Track the oldest item date for pagination
+            if oldest_item_date is None or item_date < oldest_item_date:
+                oldest_item_date = item_date
 
-        recent_projects.extend(filtered_projects)
+        recent_items.extend(filtered_items)
 
-        # If the oldest project in this batch is older than our cutoff,
-        # we've gotten all projects we need
-        if oldest_project_date and oldest_project_date <= cutoff_date:
+        # If the oldest item in this batch is older than our cutoff,
+        # we've gotten all items we need
+        if oldest_item_date and oldest_item_date <= cutoff_date:
             break
 
-        # Set up next pagination using the oldest project's created_at
-        before_param = batch_projects[-1]["created_at"]
+        # Set up next pagination using the oldest item's created_at
+        before_param = batch_items[-1]["created_at"]
 
-    return recent_projects
-
-
-# Get comments from Manifund API created within the last n days
-def get_recent_comments(lookback_days):
-    recent_comments = []
-    before_param = None
-    cutoff_date = datetime.now() - timedelta(days=lookback_days)
-
-    while True:
-        # Build URL with optional before parameter
-        url = "https://manifund.org/api/v0/comments"
-        if before_param:
-            url += f"?before={before_param}"
-
-        response = requests.get(url)
-        response.raise_for_status()
-        batch_comments = response.json()
-
-        # If no comments returned, we're done
-        if not batch_comments:
-            break
-
-        # Filter comments to only include those within our date range
-        filtered_comments = []
-        oldest_project_date = None
-
-        for project in batch_comments:
-            project_date = interpret_date(project.get("created_at"))
-            if project_date > cutoff_date:
-                filtered_comments.append(project)
-            # Track the oldest project date for pagination
-            if oldest_project_date is None or project_date < oldest_project_date:
-                oldest_project_date = project_date
-
-        recent_comments.extend(filtered_comments)
-
-        # If the oldest project in this batch is older than our cutoff,
-        # we've gotten all comments we need
-        if oldest_project_date and oldest_project_date <= cutoff_date:
-            break
-
-        # Set up next pagination using the oldest project's created_at
-        before_param = batch_comments[-1]["created_at"]
-
-    return recent_comments
+    return recent_items
 
 
 def link_comments(projects, comments):
+    """Add relevant comments to each project."""
     for project in projects:
         project["comments"] = [
             f"{c['profiles']['full_name']} says: {c['content']}"
             for c in comments
             if c["projects"]["slug"] == project["slug"]
         ]
+        # Reverse to show oldest comments first
         project["comments"].reverse()
     return projects
 
 
 if __name__ == "__main__":
-    lookback_days = 7
-    projects = get_recent_projects(lookback_days)
-    comments = get_recent_comments(lookback_days)
+    # Get config
+    load_dotenv()
+
+    # Fetch recent projects and comments
+    projects = get_recent_items("projects")
+    comments = get_recent_items("comments")
+
+    # Link comments to their respective projects
     projects = link_comments(projects, comments)
 
-    result = []
-    for project in projects:
-        result.append(
-            {
-                "source": "Manifund",
-                "title": f"{project['title']} by {project['profiles']['full_name']}",
-                "link": f"https://manifund.org/projects/{project['slug']}",
-                "input": project,
-            }
-        )
+    # Format output for digest system
+    result = [
+        {
+            "source": "Manifund",
+            "title": f"{project['title']} by {project['profiles']['full_name']}",
+            "link": f"https://manifund.org/projects/{project['slug']}",
+            "input": project,
+        }
+        for project in projects
+    ]
+
     print(json.dumps(result, indent=4))

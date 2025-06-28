@@ -2,7 +2,7 @@
 
 # Path to the data loader to use.
 # Output must be in valid JSON printed to stdout.
-loader = "sources/manifund-projects/manifund-projects.py"
+loader = "sources/manifund/manifund.py"
 
 introduction = """
 Today you will be evaluating a grant proposal from a site called Manifund. Projects from Manifund tend to be focused on maximizing charitable impact, addressing long-term risks, and being ready for the future. I have some money set aside to contribute to a few of these projects, and you will be helping me evaluate one such project.
