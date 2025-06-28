@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 import toml
+import time
 from pathlib import Path
 import requests
 from typing import Dict, List, Any
@@ -98,7 +99,7 @@ def assemble_prompt(config: Dict[str, Any], item: Dict[str, Any]) -> str:
 
     # Add the actual input content
     prompt_parts.append(item["title"])
-    prompt_parts.append(item["input"])
+    prompt_parts.append(json.dumps(item["input"]))
 
     if "container_post" in config:
         prompt_parts.append(config["container_post"])
@@ -116,9 +117,9 @@ def call_ollama(prompt: str) -> str:
     """Call ollama with the prompt and return the response"""
     ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     ollama_model = os.getenv("OLLAMA_MODEL", "llama3.2")
+    max_retries = int(os.getenv("OLLAMA_RETRIES", 3))
 
     required_keys = {"summary", "evaluation", "importance_score", "confidence_score"}
-    max_retries = 3
 
     for attempt in range(max_retries):
         try:
@@ -130,7 +131,7 @@ def call_ollama(prompt: str) -> str:
                     "format": "json",
                     "stream": False,
                 },
-                timeout=300,
+                timeout=60,
             )
             response.raise_for_status()
 
@@ -160,6 +161,7 @@ def call_ollama(prompt: str) -> str:
 
         except requests.exceptions.RequestException as e:
             print(f"Attempt {attempt + 1}: Error calling ollama: {e}", file=sys.stderr)
+            time.sleep(1)
             if attempt == max_retries - 1:
                 print(
                     f"Failed to get response from ollama after {max_retries} attempts - {str(e)}",
