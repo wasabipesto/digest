@@ -89,7 +89,7 @@ def get_dedup_key(item: Dict[str, Any]) -> str:
 
 
 def deduplicate_items(all_items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Remove duplicate items based on title and link"""
+    """Remove duplicate items based on dedup key"""
     seen_keys: Set[str] = set()
     unique_items = []
     duplicates_removed = 0
@@ -157,6 +157,11 @@ def merge_new_with_existing(
             # New item
             new_item["first_collected"] = datetime.now().isoformat()
             new_item["last_collected"] = datetime.now().isoformat()
+            new_item["num_evals"] = 0
+            new_item["evals"] = []
+            new_item["weighted_score"] = None
+            new_item["median_confidence"] = None
+            new_item["last_eval"] = None
             merged_items.append(new_item)
             new_count += 1
 
@@ -165,12 +170,6 @@ def merge_new_with_existing(
         if "dedup_key" in existing_item and existing_item["dedup_key"] not in {
             item["dedup_key"] for item in new_items
         }:
-            # Initialize counters and other fields
-            existing_item["num_evals"] = 0
-            existing_item["evals"] = []
-            existing_item["weighted_score"] = None
-            existing_item["median_confidence"] = None
-            existing_item["last_eval"] = None
             merged_items.append(existing_item)
 
     print(f"Added {new_count} new items, updated {updated_count} existing items")
