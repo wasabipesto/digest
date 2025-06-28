@@ -19,7 +19,7 @@ Digest fetches data from configured sources, assembles prompts based on my inter
   - [x] Gracefully handle data loader failures
   - [x] Cache the data to avoid unnecessary API calls
 - [x] Run the evaluation many times and take a weighted average
-  - [ ] Get smarter about when to re-evaluate items
+  - [x] Get smarter about when to re-evaluate items
 - [ ] Have the LLM compare multiple items to build a ranked list
 - [ ] Enable image interpretation
 - [ ] Benchmark the results

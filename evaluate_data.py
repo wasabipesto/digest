@@ -159,9 +159,26 @@ def call_ollama(prompt: str) -> Dict[str, Any]:
     raise RuntimeError("Unexpected error in call_ollama")
 
 
-def needs_evaluation(item: Dict[str, Any], max_evals_for_pass: int) -> bool:
+def needs_evaluation(item: Dict[str, Any], eval_round_num: int) -> bool:
     """Check if an item needs evaluation for the current pass"""
-    return item["num_evals"] < max_evals_for_pass
+    num_evals_passed = item["num_evals"]
+    queued_to_reevaluate = num_evals_passed < eval_round_num
+    been_evaluated_a_lot = num_evals_passed > 5
+    high_confidence = item["median_confidence"] > 80
+    obviously_good = item["weighted_score"] > 80
+    obviously_bad = item["weighted_score"] < 20
+
+    # Big brain time: If we're confident that the item is good or bad, don't evaluate it again
+    if (
+        queued_to_reevaluate
+        and been_evaluated_a_lot
+        and high_confidence
+        and (obviously_good or obviously_bad)
+    ):
+        return False
+
+    # Standard mode: Only if queued
+    return queued_to_reevaluate
 
 
 def weighted_score(evals: List[Dict[str, Any]]) -> float:
