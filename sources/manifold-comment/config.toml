@@ -1,0 +1,27 @@
+# Configuration for the Manifold Comment data source.
+
+# Path to the data loader to use.
+# Output must be in valid JSON printed to stdout.
+loader = "sources/manifold-comment/comments.py"
+
+introduction = """
+Today you will be evaluating a user comment from Manifold, a prediction market site. The best comments are very interesting, with original research or well-thought out ideas. Markets can range from politics to scientific breakthroughs, and the comments are often insightful and thought-provoking.
+"""
+
+criteria = """
+As my assistant, you will now perform a thorough and insightful review of the user comment you just read.
+
+Some characteristics of good comments include:
+- Well thought-out ideas.
+- Well-researched information.
+- Well-written and clear.
+
+Some poor characteristics of comments include:
+- Lack of clarity or coherence.
+- A simple joke.
+
+Give this comment a score of zero if it is primarily about:
+- The market creator or resolution criteria.
+
+When you write your final report, I will know that it's a comment on Manifold. No need to repeat that.
+"""
