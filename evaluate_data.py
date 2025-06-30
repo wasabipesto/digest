@@ -164,9 +164,9 @@ def needs_evaluation(item: Dict[str, Any], eval_round_num: int) -> bool:
     num_evals_passed = item["num_evals"]
     queued_to_reevaluate = num_evals_passed < eval_round_num
     been_evaluated_a_lot = num_evals_passed > 5
-    high_confidence = item["median_confidence"] > 80
-    obviously_good = item["weighted_score"] > 80
-    obviously_bad = item["weighted_score"] < 20
+    high_confidence = item["median_confidence"] and item["median_confidence"] > 80
+    obviously_good = item["weighted_score"] and item["weighted_score"] > 80
+    obviously_bad = item["weighted_score"] and item["weighted_score"] < 20
 
     # Big brain time: If we're confident that the item is good or bad, don't evaluate it again
     if (
