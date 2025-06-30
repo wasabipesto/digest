@@ -14,3 +14,4 @@ wheels/
 
 # Data files
 *.json
+plots
