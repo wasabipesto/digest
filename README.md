@@ -26,7 +26,7 @@ Digest fetches data from configured sources, assembles prompts based on my inter
   - [ ] Evaluate workflows against accuracy (false positive/negative), inference speed, summarization quality
   - [ ] Try: Local models (gemma, mistral, deepseek, qwen, phi)
   - [ ] Try: Provider models (gemini, openai, claude) (batch mode?)
-  - [ ] Try: Prompt engineering (red/blue teaming)
+  - [ ] Try: Prompt engineering (ordering, red/blue teaming)
 - [ ] Get additional data for the model
   - [ ] During collect, fetch links for e.g. HN and RSS
   - [ ] Save images and submit to the model for e.g. ProductHunt and marketing emails
