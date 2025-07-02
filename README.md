@@ -13,7 +13,7 @@ Digest fetches data from configured sources, assembles prompts based on my inter
 - [x] Use any LLM through Ollama to evaluate content against your criteria
   - [x] Extract summaries, evaluations, and confidence scores
 - [x] See all results in a simple web view
-  - [ ] Get it all wrapped up in a weekly email digest
+  - [x] Get it all wrapped up in a weekly email digest
 - [x] Advanced data handling
   - [x] Run single loaders at a time
   - [x] Gracefully handle data loader failures
@@ -94,6 +94,16 @@ After running the digest, you can view the results in a simple web interface:
 just web
 ```
 
+Then generate and send an HTML email digest of filtered results:
+
+```bash
+# Preview the digest
+just email-preview
+
+# Send email via Mailgun
+just email-send
+```
+
 ## Two-Step Workflow
 
 Digest now uses a two-step workflow for better efficiency and reliability:
@@ -116,7 +126,7 @@ Digest now uses a two-step workflow for better efficiency and reliability:
 
 ### Environment Variables
 
-Secrets and data loaders configuration variables are stored in environment variables. These are automatically loaded when found in `.env`.
+Secrets and data loaders configuration variables are stored in environment variables. These are automatically loaded when found in `.env`. The required items can be found in `.env.example`, which can be used as a template.
 
 ### Base Configuration
 

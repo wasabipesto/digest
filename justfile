@@ -30,12 +30,23 @@ evaluate-forever:
 # Complete workflow: collect then evaluate
 workflow: collect evaluate
 
-# Migrate existing digest_results.json to new two-step format
-migrate:
-    uv run migrate_data.py
-
-# Serve the web view
-web:
+# Check the result file exists
+_check_result_file_exists:
     @if [ ! -f digest_results.json ]; then echo "Results missing! Run the loaders first."; exit 1; fi
+
+# Serve the web diagnostics view
+web: _check_result_file_exists
     @echo "Starting web server on http://localhost:8000"
     python3 -m http.server -b localhost 8000
+
+# Generate email digest and save to file
+email-save: _check_result_file_exists
+    uv run send_email.py save
+
+# Generate email digest and open in browser
+email-preview: _check_result_file_exists
+    uv run send_email.py preview
+
+# Send email digest via Mailgun
+email-send: _check_result_file_exists
+    uv run send_email.py send
