@@ -10,6 +10,7 @@ Digest fetches data from configured sources, assembles prompts based on my inter
 
 - [x] Easily add multiple data sources with their own configuration
   - [x] Start with a simple base configuration and refine with source-specific prompts
+  - [ ] Allow all parameters to be customized per-source
 - [x] Use any LLM through Ollama to evaluate content against your criteria
   - [x] Extract summaries, evaluations, and confidence scores
 - [x] See all results in a simple web view
@@ -20,12 +21,20 @@ Digest fetches data from configured sources, assembles prompts based on my inter
   - [x] Cache the data to avoid unnecessary API calls
 - [x] Run the evaluation many times and take a weighted average
   - [x] Get smarter about when to re-evaluate items
-- [ ] Have the LLM compare multiple items to build a ranked list
-- [ ] Enable image interpretation
-- [ ] Benchmark the results
-- [ ] Let the LLM do research on its own with Perplexity
-- [ ] Build personas looking for different things and let each give its own score
-- [ ] Give it a feedback loop to learn (maybe with Reddit-style upvotes/downvotes)
+- [ ] Benchmark different models, prompts, and tools
+  - [ ] Easily create a standardized benchmarking set with real inputs and user scores
+  - [ ] Evaluate workflows against accuracy (false positive/negative), inference speed, summarization quality
+  - [ ] Try: Local models (gemma, mistral, deepseek, qwen, phi)
+  - [ ] Try: Provider models (gemini, openai, claude) (batch mode?)
+  - [ ] Try: Prompt engineering (red/blue teaming)
+- [ ] Get additional data for the model
+  - [ ] During collect, fetch links for e.g. HN and RSS
+  - [ ] Save images and submit to the model for e.g. ProductHunt and marketing emails
+  - [ ] Let the LLM do independent research with e.g. Perplexity
+- [ ] Find better ways to determine how important/interesting an item is
+  - [ ] Build personas looking for different things and let each give its own score
+  - [ ] Have the LLM compare multiple items to build a ranked list
+  - [ ] Give it a feedback loop to learn (maybe with Reddit-style upvotes/downvotes)
 
 ## Data Sources
 
