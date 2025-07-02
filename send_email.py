@@ -122,11 +122,9 @@ def generate_html_email(
     </head>
     <body>
         <h1>Weekly Digest</h1>
-        <p><strong>Criteria:</strong> Items from last {lookback_days} days with score ≥ {min_score}</p>
-        <p><strong>Total items:</strong> {len(items)}</p>
 
-        <div class="top-items00">
-            <h2>🏆 Top Items</h2>
+        <div>
+            <h2>🏆 Top {len(top_items)} Items</h2>
     """
 
     for item in top_items:
