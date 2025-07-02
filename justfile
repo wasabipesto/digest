@@ -48,5 +48,9 @@ email-preview: _check_result_file_exists
 email-send: _check_result_file_exists
     uv run send_email.py send
 
-# Complete weekly workflow: collect, evaluate, send
-weekly: collect evaluate email-send
+# Archive last week's results
+archive-results:
+    mv digest_results.json archive/digest_results_$(date +%Y%m%d).json
+
+# Complete weekly workflow: archive, collect, evaluate, send
+weekly: archive-results collect evaluate email-send
