@@ -27,9 +27,6 @@ evaluate:
 evaluate-forever:
     uv run evaluate_data.py --rounds inf
 
-# Complete workflow: collect then evaluate
-workflow: collect evaluate
-
 # Check the result file exists
 _check_result_file_exists:
     @if [ ! -f digest_results.json ]; then echo "Results missing! Run the loaders first."; exit 1; fi
@@ -50,3 +47,6 @@ email-preview: _check_result_file_exists
 # Send email digest via Mailgun
 email-send: _check_result_file_exists
     uv run send_email.py send
+
+# Complete weekly workflow: collect, evaluate, send
+weekly: collect evaluate email-send
