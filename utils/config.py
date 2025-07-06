@@ -9,7 +9,7 @@ with fallback to base configuration and environment variables for secrets.
 import os
 import toml
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 
 
 def load_base_config() -> Dict[str, Any]:
@@ -22,10 +22,14 @@ def load_base_config() -> Dict[str, Any]:
         return toml.load(f)
 
 
-def load_source_config(config_path: str) -> Dict[str, Any]:
+def load_source_config(config_path) -> Dict[str, Any]:
     """Load a source's config.toml file"""
     if config_path == "" or config_path is None:
         raise ValueError("Config path cannot be empty or null")
+
+    # Convert to Path object if it's a string
+    if isinstance(config_path, str):
+        config_path = Path(config_path)
 
     if not config_path.exists():
         raise FileNotFoundError(f"Source config file not found: {config_path}")
@@ -34,7 +38,7 @@ def load_source_config(config_path: str) -> Dict[str, Any]:
         return toml.load(f)
 
 
-def get_config_value(key: str, config_path: str, default: Any = None) -> Any:
+def get_config_value(key: str, config_path, default: Any = None) -> Any:
     """
     Get a configuration value with fallback priority:
     1. Environment variable (for secrets)
@@ -67,7 +71,7 @@ def get_config_value(key: str, config_path: str, default: Any = None) -> Any:
         return default
     raise ValueError(f"Configuration key '{key}' not found and no default provided")
 
-def get_config(config_path: str) -> Dict[str, Any]:
+def get_config(config_path) -> Dict[str, Any]:
     """
     Get merged configuration for a source.
     Base config is loaded first, then source config overrides it.
@@ -90,7 +94,7 @@ def get_config(config_path: str) -> Dict[str, Any]:
     return merged_config
 
 
-def get_int_config(key: str, config_path: str, default: int = 0) -> int:
+def get_int_config(key: str, config_path, default: int = 0) -> int:
     """Get an integer configuration value with type conversion"""
     value = get_config_value(key, config_path, default)
     if isinstance(value, str):
@@ -101,7 +105,7 @@ def get_int_config(key: str, config_path: str, default: int = 0) -> int:
     return int(value) if value is not None else default
 
 
-def get_float_config(key: str, config_path: str, default: float = 0.0) -> float:
+def get_float_config(key: str, config_path, default: float = 0.0) -> float:
     """Get a float configuration value with type conversion"""
     value = get_config_value(key, config_path, default)
     if isinstance(value, str):
@@ -112,7 +116,7 @@ def get_float_config(key: str, config_path: str, default: float = 0.0) -> float:
     return float(value) if value is not None else default
 
 
-def get_list_config(key: str, config_path: str, default: list = None, separator: str = ",") -> list:
+def get_list_config(key: str, config_path, default: list = None, separator: str = ",") -> list:
     """Get a list configuration value, handling both TOML arrays and comma-separated strings"""
     if default is None:
         default = []

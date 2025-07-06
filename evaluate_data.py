@@ -2,42 +2,25 @@
 
 import argparse
 import hashlib
-import json
 import os
 import sys
-import time
-import toml
+import json
 import numpy as np
-from pathlib import Path
-import requests
 from typing import Dict, List, Any
 from datetime import datetime, timedelta, UTC
+from utils import (
+    load_json_file,
+    save_json_file,
+    call_ollama,
+    get_current_timestamp,
+    load_base_config,
+    load_source_config,
+)
 
 
 def load_data(data_file: str) -> List[Dict[str, Any]]:
     """Load data from the specified file"""
-    data_path = Path(data_file)
-    if not data_path.exists():
-        raise FileNotFoundError(f"Data file not found: {data_path}")
-
-    with open(data_path, "r") as f:
-        return json.load(f)
-
-
-def load_base_config() -> Dict[str, Any]:
-    """Load base configuration from sources/base.toml"""
-    base_config_path = Path("sources/base.toml")
-    if not base_config_path.exists():
-        raise FileNotFoundError(f"Base config file not found: {base_config_path}")
-
-    with open(base_config_path, "r") as f:
-        return toml.load(f)
-
-
-def load_source_config(config_path: Path) -> Dict[str, Any]:
-    """Load a source's config.toml file"""
-    with open(config_path, "r") as f:
-        return toml.load(f)
+    return load_json_file(data_file)
 
 
 def merge_configs(
@@ -78,85 +61,6 @@ def assemble_prompt(config: Dict[str, Any], item: Dict[str, Any]) -> str:
         prompt_parts.append(config["instructions"])
 
     return "\n\n".join(prompt_parts)
-
-
-def call_ollama(prompt: str) -> Dict[str, Any]:
-    """Call ollama with the prompt and return the response"""
-    ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    ollama_model = os.getenv("OLLAMA_MODEL", "llama3.2")
-    max_retries = int(os.getenv("OLLAMA_RETRIES", 3))
-
-    required_keys = {"summary", "evaluation", "importance_score", "confidence_score"}
-
-    for attempt in range(max_retries):
-        try:
-            response = requests.post(
-                f"{ollama_base_url}/api/generate",
-                json={
-                    "model": ollama_model,
-                    "prompt": prompt,
-                    "format": "json",
-                    "stream": False,
-                },
-                timeout=60,
-            )
-            response.raise_for_status()
-            response_text = response.json().get("response")
-            response_json = json.loads(response_text)
-
-            # Check if response has all required keys
-            if isinstance(response_json, dict) and required_keys.issubset(
-                response_json.keys()
-            ):
-                if not isinstance(response_json["importance_score"], int):
-                    print(
-                        f"Attempt {attempt + 1}: Importance score ({response_json['importance_score']}) should be a number",
-                        file=sys.stderr,
-                    )
-                    continue
-                if not isinstance(response_json["confidence_score"], int):
-                    print(
-                        f"Attempt {attempt + 1}: Confidence score ({response_json['confidence_score']}) should be a number",
-                        file=sys.stderr,
-                    )
-                    continue
-
-                # All keys are present and numbers are numbers
-                return response_json
-
-            else:
-                missing_keys = required_keys - set(
-                    response_json.keys() if isinstance(response_json, dict) else []
-                )
-                print(
-                    f"Attempt {attempt + 1}: Missing required keys in response: {missing_keys}",
-                    file=sys.stderr,
-                )
-                if attempt == max_retries - 1:
-                    print(
-                        f"Failed to get valid response after {max_retries} attempts",
-                        file=sys.stderr,
-                    )
-                    raise ValueError("Failed to get valid response from ollama")
-
-        except requests.exceptions.RequestException as e:
-            print(f"Attempt {attempt + 1}: Error calling ollama: {e}", file=sys.stderr)
-            time.sleep(1)
-            if attempt == max_retries - 1:
-                raise RuntimeError(
-                    f"Failed to get response from ollama after {max_retries} attempts: {str(e)}"
-                )
-        except json.JSONDecodeError as e:
-            print(
-                f"Attempt {attempt + 1}: Error parsing JSON response: {e}",
-                file=sys.stderr,
-            )
-            if attempt == max_retries - 1:
-                raise ValueError(
-                    f"Failed to parse JSON response after {max_retries} attempts: {str(e)}"
-                )
-
-    raise RuntimeError("Unexpected error in call_ollama")
 
 
 def needs_evaluation(item: Dict[str, Any], eval_round_num: int) -> bool:
@@ -343,7 +247,7 @@ def main():
                     prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
                     eval_data["model"] = os.getenv("OLLAMA_MODEL", "llama3.2")
                     eval_data["prompt_hash"] = prompt_hash
-                    eval_data["eval_date"] = datetime.now().isoformat()
+                    eval_data["eval_date"] = get_current_timestamp()
                     eval_data["round"] = round_num
 
                     # Run through ollama
@@ -367,8 +271,7 @@ def main():
                     )
 
                     # Save after each evaluation to prevent data loss
-                    with open(args.output, "w") as f:
-                        json.dump(all_items, f, indent=2)
+                    save_json_file(all_items, args.output)
 
                 except Exception as e:
                     print(f"  Error evaluating item: {e}", file=sys.stderr)

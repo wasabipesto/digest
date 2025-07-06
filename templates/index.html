@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Digest Results Viewer</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    sans-serif;
+                line-height: 1.6;
+                color: #333;
+                background-color: #f5f5f5;
+                padding: 20px;
+            }
+
+            .container {
+                max-width: 1400px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                overflow: hidden;
+            }
+
+            .header {
+                background: #2c3e50;
+                color: white;
+                padding: 20px;
+                text-align: center;
+            }
+
+            .controls {
+                padding: 20px;
+                background: #ecf0f1;
+                border-bottom: 1px solid #ddd;
+                display: flex;
+                gap: 20px;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+
+            .control-group {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .control-group label {
+                font-weight: bold;
+                font-size: 14px;
+            }
+
+            .control-group input,
+            .control-group select {
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 14px;
+            }
+
+            .stats {
+                background: #34495e;
+                color: white;
+                padding: 15px 20px;
+                display: flex;
+                justify-content: space-around;
+                text-align: center;
+            }
+
+            .table-container {
+                overflow-x: auto;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 14px;
+            }
+
+            th {
+                background: #f8f9fa;
+                padding: 12px 8px;
+                text-align: left;
+                font-weight: bold;
+                border-bottom: 2px solid #dee2e6;
+                position: sticky;
+                top: 0;
+                cursor: pointer;
+                user-select: none;
+            }
+
+            th:hover {
+                background: #e9ecef;
+            }
+
+            th.sortable::after {
+                content: " ↕";
+                opacity: 0.5;
+            }
+
+            th.sort-asc::after {
+                content: " ↑";
+                opacity: 1;
+            }
+
+            th.sort-desc::after {
+                content: " ↓";
+                opacity: 1;
+            }
+
+            td {
+                padding: 8px;
+                border-bottom: 1px solid #dee2e6;
+            }
+
+            tr:hover {
+                background: #f8f9fa;
+            }
+
+            .title-cell {
+                max-width: 300px;
+                word-wrap: break-word;
+            }
+
+            .title-link {
+                color: #007bff;
+                text-decoration: none;
+            }
+
+            .title-link:hover {
+                text-decoration: underline;
+            }
+
+            .source-tag {
+                background: #6c757d;
+                color: white;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 12px;
+                white-space: nowrap;
+            }
+
+            .score {
+                font-weight: bold;
+                text-align: center;
+            }
+
+            .score.high {
+                color: #28a745;
+            }
+            .score.medium {
+                color: #ffc107;
+            }
+            .score.low {
+                color: #dc3545;
+            }
+
+            .details-btn {
+                background: #007bff;
+                color: white;
+                border: none;
+                padding: 4px 8px;
+                border-radius: 3px;
+                cursor: pointer;
+                font-size: 12px;
+            }
+
+            .details-btn:hover {
+                background: #0056b3;
+            }
+
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+            }
+
+            .modal-content {
+                background-color: white;
+                margin: 5% auto;
+                padding: 0;
+                border-radius: 8px;
+                width: 90%;
+                max-width: 800px;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+
+            .modal-header {
+                background: #2c3e50;
+                color: white;
+                padding: 20px;
+                border-radius: 8px 8px 0 0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .modal-header h3 {
+                margin: 0;
+            }
+
+            .close {
+                color: white;
+                font-size: 28px;
+                font-weight: bold;
+                cursor: pointer;
+                border: none;
+                background: none;
+            }
+
+            .close:hover {
+                opacity: 0.7;
+            }
+
+            .modal-body {
+                padding: 20px;
+            }
+
+            .detail-section {
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+                border-bottom: 1px solid #eee;
+            }
+
+            .detail-section:last-child {
+                border-bottom: none;
+            }
+
+            .detail-section h4 {
+                color: #2c3e50;
+                margin-bottom: 10px;
+            }
+
+            .detail-content {
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 5px;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                font-family: "Courier New", monospace;
+                font-size: 14px;
+            }
+
+            .eval-item {
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 5px;
+                margin-bottom: 10px;
+            }
+
+            .eval-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+
+            .eval-scores {
+                display: flex;
+                gap: 15px;
+            }
+
+            .eval-field {
+                margin-bottom: 8px;
+            }
+
+            .eval-field strong {
+                color: #2c3e50;
+            }
+
+            .loading {
+                text-align: center;
+                padding: 40px;
+                color: #6c757d;
+            }
+
+            .error {
+                color: #dc3545;
+                background: #f8d7da;
+                padding: 10px;
+                border-radius: 4px;
+                text-align: center;
+            }
+
+            @media (max-width: 768px) {
+                .controls {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+
+                .control-group {
+                    width: 100%;
+                }
+
+                table {
+                    font-size: 12px;
+                }
+
+                th,
+                td {
+                    padding: 6px 4px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Digest Results Viewer</h1>
+                <p>Interactive dashboard for reviewing digest evaluations</p>
+            </div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label for="search">Search:</label>
+                    <input
+                        type="text"
+                        id="search"
+                        placeholder="Search titles..."
+                        oninput="applyFilters()"
+                    />
+                </div>
+                <div class="control-group">
+                    <label for="sourceFilter">Source:</label>
+                    <select id="sourceFilter" onchange="applyFilters()">
+                        <option value="">All Sources</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="scoreFilter">Min Score:</label>
+                    <input
+                        type="number"
+                        id="scoreFilter"
+                        min="0"
+                        max="100"
+                        placeholder="0"
+                        oninput="applyFilters()"
+                    />
+                </div>
+                <div class="control-group">
+                    <label for="limitFilter">Show:</label>
+                    <select id="limitFilter" onchange="applyFilters()">
+                        <option value="50">50 items</option>
+                        <option value="100">100 items</option>
+                        <option value="250">250 items</option>
+                        <option value="500">500 items</option>
+                        <option value="">All items</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="stats" id="stats">
+                <div>
+                    <strong id="totalItems">0</strong>
+                    <div>Total Items</div>
+                </div>
+                <div>
+                    <strong id="highScore">0</strong>
+                    <div>High Score (70+)</div>
+                </div>
+                <div>
+                    <strong id="mediumScore">0</strong>
+                    <div>Medium Score (30-69)</div>
+                </div>
+                <div>
+                    <strong id="lowScore">0</strong>
+                    <div>Low Score (0-29)</div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="sortTable('weighted_score')">
+                                Score
+                            </th>
+                            <th class="sortable" onclick="sortTable('source')">
+                                Source
+                            </th>
+                            <th class="sortable" onclick="sortTable('title')">
+                                Title
+                            </th>
+                            <th class="sortable" onclick="sortTable('num_evals')">
+                                Evals
+                            </th>
+                            <th class="sortable" onclick="sortTable('median_confidence')">
+                                Confidence
+                            </th>
+                            <th class="sortable" onclick="sortTable('last_eval')">
+                                Last Eval
+                            </th>
+                            <th>Link</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                        <tr>
+                            <td colspan="8" class="loading">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modal for detailed view -->
+        <div id="detailModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Item Details</h3>
+                    <button class="close" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <div class="loading">Loading details...</div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Global data storage
+            let digestData = [];
+            let filteredData = [];
+            let currentSort = { field: "weighted_score", direction: "desc" };
+
+            // Load and initialize
+            async function loadDigestData() {
+                try {
+                    const response = await fetch("/api/data");
+                    if (!response.ok) {
+                        throw new Error(
+                            `HTTP ${response.status}: ${response.statusText}`,
+                        );
+                    }
+                    digestData = await response.json();
+
+                    // Ensure data is an array
+                    if (!Array.isArray(digestData)) {
+                        throw new Error("Expected JSON array");
+                    }
+
+                    populateSourceFilter();
+                    applyFilters();
+                    updateStats();
+                } catch (error) {
+                    showError(
+                        `Failed to load digest data: ${error.message}`,
+                    );
+                }
+            }
+
+            function showError(message) {
+                document.getElementById("resultsBody").innerHTML =
+                    `<tr><td colspan="8" class="error">${message}</td></tr>`;
+            }
+
+            function populateSourceFilter() {
+                const sources = [
+                    ...new Set(digestData.map((item) => item.source)),
+                ].sort();
+                const sourceFilter = document.getElementById("sourceFilter");
+
+                sources.forEach((source) => {
+                    const option = document.createElement("option");
+                    option.value = source;
+                    option.textContent = source;
+                    sourceFilter.appendChild(option);
+                });
+            }
+
+            function applyFilters() {
+                const searchTerm = document
+                    .getElementById("search")
+                    .value.toLowerCase();
+                const sourceFilter = document.getElementById("sourceFilter").value;
+                const scoreFilter = parseInt(
+                    document.getElementById("scoreFilter").value,
+                ) || 0;
+                const limitFilter = parseInt(
+                    document.getElementById("limitFilter").value,
+                ) || 0;
+
+                filteredData = digestData.filter((item) => {
+                    const matchesSearch =
+                        !searchTerm ||
+                        item.title.toLowerCase().includes(searchTerm);
+                    const matchesSource = !sourceFilter || item.source === sourceFilter;
+                    const matchesScore = (item.weighted_score || 0) >= scoreFilter;
+
+                    return matchesSearch && matchesSource && matchesScore;
+                });
+
+                sortData();
+
+                // Apply limit
+                if (limitFilter > 0) {
+                    filteredData = filteredData.slice(0, limitFilter);
+                }
+
+                renderTable();
+                updateStats();
+            }
+
+            function sortData() {
+                filteredData.sort((a, b) => {
+                    let aVal = a[currentSort.field];
+                    let bVal = b[currentSort.field];
+
+                    // Handle null/undefined values
+                    if (aVal === null || aVal === undefined) aVal = "";
+                    if (bVal === null || bVal === undefined) bVal = "";
+
+                    // Special handling for dates
+                    if (currentSort.field === "last_eval") {
+                        aVal = new Date(aVal || 0);
+                        bVal = new Date(bVal || 0);
+                    }
+
+                    // Convert to strings for comparison if needed
+                    if (typeof aVal === "string") aVal = aVal.toLowerCase();
+                    if (typeof bVal === "string") bVal = bVal.toLowerCase();
+
+                    if (aVal < bVal) {
+                        return currentSort.direction === "asc" ? -1 : 1;
+                    }
+                    if (aVal > bVal) {
+                        return currentSort.direction === "asc" ? 1 : -1;
+                    }
+                    return 0;
+                });
+            }
+
+            function renderTable() {
+                const tbody = document.getElementById("resultsBody");
+                tbody.innerHTML = "";
+
+                if (filteredData.length === 0) {
+                    tbody.innerHTML =
+                        '<tr><td colspan="8" class="loading">No items match your filters</td></tr>';
+                    return;
+                }
+
+                filteredData.forEach((item) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td class="score ${getScoreClass(item.weighted_score)}">
+                            ${item.weighted_score || 0}
+                        </td>
+                        <td><span class="source-tag">${item.source}</span></td>
+                        <td class="title-cell">
+                            <a href="${item.link}" target="_blank" class="title-link">
+                                ${item.title}
+                            </a>
+                        </td>
+                        <td>${item.num_evals || 0}</td>
+                        <td>${item.median_confidence || 0}</td>
+                        <td>${item.last_eval ? new Date(item.last_eval).toLocaleDateString() : ""}</td>
+                        <td>
+                            <a href="${item.link}" target="_blank">
+                                🔗
+                            </a>
+                        </td>
+                        <td>
+                            <button class="details-btn" onclick="showDetails('${item.dedup_key}')">
+                                Details
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            function getScoreClass(score) {
+                if (score >= 70) return "high";
+                if (score >= 30) return "medium";
+                return "low";
+            }
+
+            function updateStats() {
+                const total = filteredData.length;
+                const high = filteredData.filter(item => (item.weighted_score || 0) >= 70).length;
+                const medium = filteredData.filter(item => {
+                    const score = item.weighted_score || 0;
+                    return score >= 30 && score < 70;
+                }).length;
+                const low = filteredData.filter(item => (item.weighted_score || 0) < 30).length;
+
+                document.getElementById("totalItems").textContent = total;
+                document.getElementById("highScore").textContent = high;
+                document.getElementById("mediumScore").textContent = medium;
+                document.getElementById("lowScore").textContent = low;
+            }
+
+            async function showDetails(dedupKey) {
+                const modal = document.getElementById("detailModal");
+                const modalBody = document.getElementById("modalBody");
+                const modalTitle = document.getElementById("modalTitle");
+
+                modalBody.innerHTML = '<div class="loading">Loading details...</div>';
+                modal.style.display = "block";
+
+                try {
+                    const response = await fetch(`/api/item/${dedupKey}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    const item = await response.json();
+
+                    modalTitle.textContent = item.title;
+
+                    let html = `
+                        <div class="detail-section">
+                            <h4>Basic Information</h4>
+                            <div class="detail-content">
+                                <strong>Source:</strong> ${item.source}
+                                <strong>Link:</strong> <a href="${item.link}" target="_blank">${item.link}</a>
+                                <strong>Dedup Key:</strong> ${item.dedup_key}
+                                <strong>Weighted Score:</strong> ${item.weighted_score || 0}
+                                <strong>Number of Evaluations:</strong> ${item.num_evals || 0}
+                                <strong>Median Confidence:</strong> ${item.median_confidence || 0}
+                                <strong>Last Evaluated:</strong> ${item.last_eval ? new Date(item.last_eval).toLocaleString() : "Never"}
+                            </div>
+                        </div>
+                    `;
+
+                    if (item.input) {
+                        html += `
+                            <div class="detail-section">
+                                <h4>Input Data</h4>
+                                <div class="detail-content">${JSON.stringify(item.input, null, 2)}</div>
+                            </div>
+                        `;
+                    }
+
+                    if (item.evals && item.evals.length > 0) {
+                        html += `<div class="detail-section">
+                            <h4>Evaluations (${item.evals.length})</h4>
+                        `;
+
+                        item.evals.forEach((eval, index) => {
+                            html += `
+                                <div class="eval-item">
+                                    <div class="eval-header">
+                                        <strong>Evaluation ${index + 1}</strong>
+                                        <div class="eval-scores">
+                                            <span>Score: ${eval.response.importance_score}</span>
+                                            <span>Confidence: ${eval.response.confidence_score}</span>
+                                        </div>
+                                    </div>
+                                    <div class="eval-field">
+                                        <strong>Model:</strong> ${eval.model}
+                                    </div>
+                                    <div class="eval-field">
+                                        <strong>Date:</strong> ${new Date(eval.eval_date).toLocaleString()}
+                                    </div>
+                                    <div class="eval-field">
+                                        <strong>Summary:</strong> ${eval.response.summary}
+                                    </div>
+                                    <div class="eval-field">
+                                        <strong>Evaluation:</strong> ${eval.response.evaluation}
+                                    </div>
+                                </div>
+                            `;
+                        });
+
+                        html += `</div>`;
+                    }
+
+                    modalBody.innerHTML = html;
+                } catch (error) {
+                    modalBody.innerHTML = `<div class="error">Failed to load item details: ${error.message}</div>`;
+                }
+            }
+
+            function closeModal() {
+                document.getElementById("detailModal").style.display = "none";
+            }
+
+            function sortTable(field) {
+                // Update sort state
+                if (currentSort.field === field) {
+                    currentSort.direction = currentSort.direction === "asc" ? "desc" : "asc";
+                } else {
+                    currentSort.field = field;
+                    currentSort.direction = "desc";
+                }
+
+                // Update UI
+                document.querySelectorAll("th").forEach(th => {
+                    th.classList.remove("sort-asc", "sort-desc");
+                });
+
+                const header = document.querySelector(`th[onclick="sortTable('${field}')"]`);
+                if (header) {
+                    header.classList.add(currentSort.direction === "asc" ? "sort-asc" : "sort-desc");
+                }
+
+                // Re-sort and render
+                sortData();
+                renderTable();
+            }
+
+            // Close modal when clicking outside
+            window.onclick = function(event) {
+                const modal = document.getElementById("detailModal");
+                if (event.target === modal) {
+                    closeModal();
+                }
+            };
+
+            // Initialize the application
+            document.addEventListener("DOMContentLoaded", loadDigestData);
+        </script>
+    </body>
+</html>

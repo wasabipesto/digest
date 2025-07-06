@@ -73,10 +73,11 @@ Digest fetches data from configured sources, assembles prompts based on my inter
    ```bash
    nano sources/base.toml
    nano sources/arxiv/config.toml
+   ...
    ```
 4. Run the full workflow:
    ```bash
-   just workflow
+   just weekly
    ```
 
 ### Advanced Usage
@@ -97,13 +98,13 @@ just evaluate-forever
 
 ### Viewing Results
 
-After running the digest, you can view the results in a simple web interface:
+After running the digest, you can view the results in a Flask web application:
 
 ```bash
 just web
 ```
 
-Then generate and send an HTML email digest of filtered results:
+You can also generate and send an HTML email digest of filtered results:
 
 ```bash
 # Preview the digest
@@ -139,7 +140,7 @@ Secrets and data loaders configuration variables are stored in environment varia
 
 ### Base Configuration
 
-The base configuration is in `sources/base.toml` and contains:
+The base prompt configuration is in `sources/base.toml` and contains:
 
 - **header**: Your interests and preferences
 - **introduction**: Task introduction
@@ -155,9 +156,11 @@ Each source has its own directory under `sources/` with the following items.
 
 The configuration file for each source must be named `config.toml`.
 
-The only required key is `loader`, which must point to an executable data loader, described below.
+The only required key for all sources is `loader`, which must point to an executable data loader, described below.
 
 Optionally, you can overwrite any of the prompt segments defined in the base configuration by using the same keys.
+
+Some loaders have their own specific configuration variables, documented in that source's TOML file.
 
 ### Data Loader
 

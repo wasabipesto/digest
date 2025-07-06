@@ -1,23 +1,17 @@
 #!/usr/bin/env python3
 
 import argparse
-import json
 import sys
-import toml
 from pathlib import Path
 from typing import Dict, List, Any, Set
-from datetime import datetime
-import hashlib
-
-
-def load_base_config() -> Dict[str, Any]:
-    """Load base configuration from sources/base.toml"""
-    base_config_path = Path("sources/base.toml")
-    if not base_config_path.exists():
-        raise FileNotFoundError(f"Base config file not found: {base_config_path}")
-
-    with open(base_config_path, "r") as f:
-        return toml.load(f)
+from utils import (
+    load_json_file_safe,
+    save_json_file,
+    get_dedup_key,
+    get_current_timestamp,
+    run_subprocess_with_json_output,
+    load_source_config,
+)
 
 
 def find_source_configs() -> List[Path]:
@@ -34,45 +28,21 @@ def find_source_configs() -> List[Path]:
     return config_files
 
 
-def load_source_config(config_path: Path) -> Dict[str, Any]:
-    """Load a source's config.toml file"""
-    with open(config_path, "r") as f:
-        return toml.load(f)
-
-
 def run_data_loader(loader_path: str) -> List[Dict[str, Any]]:
     """Run a source's data loader and return the JSON output"""
-    import subprocess
-
     try:
         # Make the loader path executable
         full_loader_path = Path(loader_path)
         if not full_loader_path.exists():
             raise FileNotFoundError(f"Data loader not found: {full_loader_path}")
 
-        # Run the loader script
-        result = subprocess.run(
-            [str(full_loader_path)],
-            capture_output=True,
-            text=True,
-            check=True,
-            cwd=Path.cwd(),
+        # Run the loader script using the common utility
+        return run_subprocess_with_json_output(
+            [str(full_loader_path)], cwd=str(Path.cwd())
         )
 
-        # Pass through stderr
-        [print(l) for l in result.stderr.splitlines() if l.strip() != ""]
-
-        # Parse JSON output from stdout
-        data = json.loads(result.stdout)
-        return data if isinstance(data, list) else [data]
-
-    except subprocess.CalledProcessError as e:
+    except Exception as e:
         print(f"Error running data loader {loader_path}: {e}", file=sys.stderr)
-        print(f"stderr: {e.stderr}", file=sys.stderr)
-        return []
-    except json.JSONDecodeError as e:
-        print(f"Error parsing JSON from {loader_path}: {e}", file=sys.stderr)
-        print(f"stdout: {result.stdout}", file=sys.stderr)
         return []
 
 
@@ -83,12 +53,6 @@ def merge_configs(
     merged = base_config.copy()
     merged.update(source_config)
     return merged
-
-
-def get_dedup_key(item: Dict[str, Any]) -> str:
-    """Generate a deduplication key for this item"""
-    dedup_string = f"{item['source']}|{item['link']}"
-    return hashlib.md5(dedup_string.encode("utf-8")).hexdigest()
 
 
 def deduplicate_items(all_items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -111,18 +75,6 @@ def deduplicate_items(all_items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         print(f"Removed {duplicates_removed} duplicate items")
 
     return unique_items
-
-
-def load_existing_data(data_file: str) -> List[Dict[str, Any]]:
-    """Load existing data from file if it exists"""
-    data_path = Path(data_file)
-    if data_path.exists():
-        try:
-            with open(data_path, "r") as f:
-                return json.load(f)
-        except (json.JSONDecodeError, FileNotFoundError):
-            pass
-    return []
 
 
 def merge_new_with_existing(
@@ -153,13 +105,13 @@ def merge_new_with_existing(
                     existing_item[key] = value
 
             # Update collection timestamp
-            existing_item["last_collected"] = datetime.now().isoformat()
+            existing_item["last_collected"] = get_current_timestamp()
             merged_items.append(existing_item)
             updated_count += 1
         else:
             # New item
-            new_item["first_collected"] = datetime.now().isoformat()
-            new_item["last_collected"] = datetime.now().isoformat()
+            new_item["first_collected"] = get_current_timestamp()
+            new_item["last_collected"] = get_current_timestamp()
             new_item["num_evals"] = 0
             new_item["evals"] = []
             new_item["weighted_score"] = None
@@ -232,7 +184,7 @@ def main():
             return
 
         # Load existing data
-        existing_data = load_existing_data(args.output)
+        existing_data = load_json_file_safe(args.output)
         print(f"Loaded {len(existing_data)} existing items")
 
         all_new_items = []
@@ -278,8 +230,7 @@ def main():
 
         # Save results to file
         print(f"\nSaving {len(final_items)} total items to {args.output}")
-        with open(args.output, "w") as f:
-            json.dump(final_items, f, indent=2)
+        save_json_file(final_items, args.output)
 
         print("Data collection completed successfully!")
 

@@ -1,15 +1,9 @@
-import json
 import matplotlib.pyplot as plt
 import os
 from collections import defaultdict
+from utils import load_json_file
 
 PLOTS_DIR = "plots"
-TARGET_ITEM_KEY = "dcac426447620e3ee276475df208f58d"
-
-
-def load_digest_results(path):
-    with open(path, "r") as f:
-        return json.load(f)
 
 
 def extract_items(digest_results):
@@ -36,26 +30,6 @@ def extract_items(digest_results):
 
     all_items.sort(key=lambda x: x["weighted_score"])
     return all_items
-
-
-def plot_target_scatter(all_items):
-    target_item = [i for i in all_items if i["dedup_key"] == TARGET_ITEM_KEY][0]
-
-    fig, ax = plt.subplots(figsize=(10, 8))
-
-    scores = [e["score"] for e in target_item["evals"]]
-    confidences = [e["confidence"] for e in target_item["evals"]]
-    ax.scatter(scores, confidences, alpha=0.6, s=50)
-    ax.set_title(f"Scores vs Confidence for\n{target_item['title']}")
-
-    ax.set_xlim(0, 100)
-    ax.set_ylim(0, 100)
-    ax.set_xlabel("Importance Score")
-    ax.set_ylabel("Confidence Score")
-    ax.grid(True, alpha=0.3)
-    plt.tight_layout()
-    plt.savefig(f"{PLOTS_DIR}/target_scatterplot.png", dpi=300, bbox_inches="tight")
-    plt.close(fig)
 
 
 def plot_importance_eventplot(all_items, max_items_to_show=20, max_title_len=50):
@@ -129,10 +103,9 @@ def plot_all_scatter(all_items):
 
 if __name__ == "__main__":
     os.makedirs(PLOTS_DIR, exist_ok=True)
-    digest_results = load_digest_results("digest_results.json")
+    digest_results = load_json_file("digest_results.json")
     all_items = extract_items(digest_results)
 
-    plot_target_scatter(all_items)
     plot_importance_eventplot(all_items)
     plot_all_scatter(all_items)
 

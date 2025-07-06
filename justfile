@@ -33,8 +33,8 @@ _check_result_file_exists:
 
 # Serve the web diagnostics view
 web: _check_result_file_exists
-    @echo "Starting web server on http://localhost:8000"
-    python3 -m http.server -b localhost 8000
+    @echo "Starting Flask web server on http://127.0.0.1:5000"
+    uv run app.py
 
 # Generate email digest and save to file
 email-save: _check_result_file_exists
