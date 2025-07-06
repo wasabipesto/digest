@@ -2,6 +2,7 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
+#     "toml",
 #     "dotenv",
 #     "requests",
 #     "jinja2",
@@ -24,6 +25,13 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta, UTC
 import tiptapy
 from bs4 import BeautifulSoup
+from pathlib import Path
+import sys
+
+# Add parent directory to path to import utils
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from utils.config import get_config_value, get_int_config
+config_path = Path(f"sources/manifold-comment/config.toml")
 
 
 def get_date(item):
@@ -36,26 +44,23 @@ def get_date(item):
         print("No date found")
 
 
-def filter_by_date(item):
-    """Keep items that are newer than the cutoff date."""
-    lookback_days = int(os.getenv("LOOKBACK_DAYS", 7))
-    cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
-    return get_date(item) > cutoff_date
-
-
 def get_comments():
     """
     Get comments from Manifold's database with a minimum number of likes.
     Manifold comments API doesn't allow filtering by likes so we use the Supabase connection instead.
     """
-    min_likes = 15
+    min_likes = get_int_config("min_likes", config_path, 15)
+    max_comments = get_int_config("max_comments", config_path, 200)
+    lookback_days = get_int_config("lookback_days", config_path, 7)
+    cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
+
     supabase_anon_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4aWRyZ2thdHVtbHZmcWF4Y2xsIiwicm9sZSI6ImFub24iLCJpYXQiOjE2Njg5OTUzOTgsImV4cCI6MTk4NDU3MTM5OH0.d_yYtASLzAoIIGdXUBIgRAGLBnNow7JG2SoaNMQ8ySg"
-    all_items = requests.get(
+    comments = requests.get(
         "https://pxidrgkatumlvfqaxcll.supabase.co/rest/v1/contract_comments",
-        params={"likes": f"gte.{min_likes}"},
+        params={"likes": f"gte.{min_likes}", "created_time": f"gte.{cutoff_date.isoformat()}", "limit": max_comments},
         headers={"apikey": supabase_anon_key},
     ).json()
-    return [i for i in all_items if filter_by_date(i)]
+    return comments
 
 
 def get_link(comment):

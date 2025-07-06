@@ -50,7 +50,11 @@ email-send: _check_result_file_exists
 
 # Archive last week's results
 archive-results:
-    mv digest_results.json archive/digest_results_$(date +%Y%m%d).json
+    if [ -f digest_results.json ]; then \
+        mkdir -p archive && \
+        mv digest_results.json archive/digest_results_$(date +%Y%m%d).json; \
+    fi
+
 
 # Complete weekly workflow: archive, collect, evaluate, send
 weekly: archive-results collect evaluate email-send

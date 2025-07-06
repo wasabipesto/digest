@@ -3,3 +3,10 @@
 # Path to the data loader to use.
 # Output must be in valid JSON printed to stdout.
 loader = "sources/freshrss/fever.py"
+
+# FreshRSS-specific configuration
+# Batch size for fetching items
+batch_size = 50
+
+# Minimum score for email inclusion
+# min_email_score = 70

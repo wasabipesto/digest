@@ -7,15 +7,23 @@ from typing import Dict, List, Any
 import requests
 from collections import defaultdict
 import subprocess
+from pathlib import Path
+import sys
+
+# Add utils to path to import config utilities
+sys.path.insert(0, str(Path(__file__).parent))
+from utils.config import get_config_value, get_float_config, load_source_config
 
 
-def is_item_important(item: Dict[str, Any], min_score: float) -> bool:
+def is_item_important(item: Dict[str, Any]) -> bool:
     """Check if an item meets the importance score cutoff"""
-    return (item.get("weighted_score", 0) or 0) >= min_score
+    min_score = get_float_config("min_email_score", item["config_path"], 70.0)
+    return (item.get("weighted_score") or 0) >= min_score
 
 
-def is_item_recent(item: Dict[str, Any], lookback_days: int) -> bool:
+def is_item_recent(item: Dict[str, Any]) -> bool:
     """Check if an item was created within the lookback period"""
+    lookback_days = get_int_config("lookback_days", item["config_path"], 7)
     if lookback_days <= 0:
         return True  # No date filtering
 
@@ -52,13 +60,13 @@ def get_item_summary(item: Dict[str, Any]) -> str:
 
 
 def filter_and_sort_items(
-    items: List[Dict[str, Any]], lookback_days: int, min_score: float
+    items: List[Dict[str, Any]]
 ) -> List[Dict[str, Any]]:
     """Filter items by date and score, then sort by weighted score"""
     filtered_items = [
         i
         for i in items
-        if is_item_important(i, min_score) and is_item_recent(i, lookback_days)
+        if is_item_important(i) and is_item_recent(i)
     ]
 
     # Sort by weighted score (highest first)
@@ -83,7 +91,7 @@ def generate_email_subject(items: List[Dict[str, Any]]) -> str:
 
 
 def generate_html_email(
-    items: List[Dict[str, Any]], lookback_days: int, min_score: float
+    items: List[Dict[str, Any]]
 ) -> str:
     """Generate HTML email content"""
     if not items:
@@ -196,11 +204,13 @@ def open_in_browser(html_content: str):
     print(f"Opened in browser: {temp_path}")
 
 
-def send_via_mailgun(html_content: str, subject: str, recipient_email: str):
+def send_via_mailgun(html_content: str, subject: str):
     """Send email via Mailgun API"""
     mailgun_api_key = os.getenv("MAILGUN_API_KEY")
     mailgun_domain = os.getenv("MAILGUN_DOMAIN")
     sender_email = os.getenv("SENDER_EMAIL", f"digest@{mailgun_domain}")
+    recipient_email = os.getenv("RECIPIENT_EMAIL")
+    print(f"Sending email from {sender_email} to {recipient_email}...")
 
     if not mailgun_api_key:
         raise ValueError("MAILGUN_API_KEY environment variable is required")
@@ -243,40 +253,7 @@ def main():
         default="digest_email.html",
         help="Output HTML file name when using 'save' action (default: digest_email.html)",
     )
-    parser.add_argument(
-        "--recipient", help="Email recipient (overrides RECIPIENT_EMAIL env var)"
-    )
-    parser.add_argument(
-        "--lookback-days",
-        type=int,
-        help="Days to look back (overrides LOOKBACK_DAYS env var)",
-    )
-    parser.add_argument(
-        "--min-score",
-        type=float,
-        help="Minimum importance score (overrides MIN_EMAIL_SCORE env var)",
-    )
-
     args = parser.parse_args()
-
-    # Get configuration from environment variables or arguments
-    lookback_days = (
-        args.lookback_days
-        if args.lookback_days is not None
-        else int(os.getenv("LOOKBACK_DAYS", "7"))
-    )
-    min_score = (
-        args.min_score
-        if args.min_score is not None
-        else float(os.getenv("MIN_EMAIL_SCORE", 70))
-    )
-    recipient_email = args.recipient or os.getenv("RECIPIENT_EMAIL")
-
-    # Validate email action requirements
-    if args.action == "send" and not recipient_email:
-        parser.error(
-            "Email recipient is required. Use --recipient or set RECIPIENT_EMAIL environment variable."
-        )
 
     # Load and process data
     print(f"Loading data from {args.input}...")
@@ -293,19 +270,17 @@ def main():
     print(f"Loaded {len(digest_results)} total items")
 
     # Filter and sort items
-    print(f"Filtering items: last {lookback_days} days, score >= {min_score}")
-    filtered_items = filter_and_sort_items(digest_results, lookback_days, min_score)
+    print(f"Filtering items using source-specific thresholds")
+    filtered_items = filter_and_sort_items(digest_results)
     print(f"Found {len(filtered_items)} items matching criteria")
 
     if not filtered_items:
         print("No items found matching the criteria")
-        if args.action == "send":
-            print("Skipping email send - no content to send")
         return 0
 
     # Generate HTML content
     print("Generating HTML content...")
-    html_content = generate_html_email(filtered_items, lookback_days, min_score)
+    html_content = generate_html_email(filtered_items)
     subject = generate_email_subject(filtered_items)
 
     # Execute the requested action
@@ -317,8 +292,7 @@ def main():
         open_in_browser(html_content)
 
     elif args.action == "send":
-        print(f"Sending email to {recipient_email}...")
-        success = send_via_mailgun(html_content, subject, recipient_email)
+        success = send_via_mailgun(html_content, subject)
         if not success:
             return 1
 

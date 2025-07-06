@@ -1,6 +1,20 @@
 # This is the base configuration file with text used to build the full prompt for evaluation.
 # If any source config files have keys that conflict with these, the source file values are used.
 
+# Common configuration defaults
+# Number of days to look back for new items
+lookback_days = 7
+
+# Number of evaluation rounds for items
+eval_rounds = 3
+
+# Minimum importance score for items to be included in email digest
+min_email_score = 70
+
+# Provider/model to use for evaluations
+eval_provider = "ollama"
+eval_model = "llama3.2"
+
 # Overall prompt assembly order will be:
 #   - Header
 #   - Introduction

@@ -4,6 +4,14 @@
 # Output must be in valid JSON printed to stdout.
 loader = "sources/manifold-comment/comments.py"
 
+# Manifold comment-specific configuration
+# Minimum likes required for a comment to be included
+min_likes = 15
+
+# Minimum score for email inclusion
+# min_email_score = 70
+
+# Prompt overrides
 introduction = """
 Today you will be evaluating a user comment from Manifold, a prediction market site. The best comments are very interesting, with original research or well-thought out ideas. Markets can range from politics to scientific breakthroughs, and the comments are often insightful and thought-provoking.
 """

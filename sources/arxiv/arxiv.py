@@ -2,7 +2,7 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
-#     "dotenv",
+#     "toml",
 #     "requests",
 #     "feedparser",
 # ]
@@ -19,32 +19,40 @@ import os
 import json
 import requests
 import feedparser
-from dotenv import load_dotenv
 from datetime import datetime, timedelta, UTC
 import re
 import sys
+from pathlib import Path
+
+# Add parent directory to path to import utils
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from utils.config import get_config_value, get_int_config, get_list_config
+config_path = Path(f"sources/arxiv/config.toml")
 
 
 def get_recent_papers():
     """Downloads recent papers from Arxiv"""
-    lookback_days = int(os.getenv("LOOKBACK_DAYS", 7))
+    lookback_days = get_int_config("lookback_days", config_path, 7)
     cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
 
-    # ArXiv categories to search (can be customized via env var)
-    categories = os.getenv(
-        "ARXIV_CATEGORIES",
-        "physics.app-ph,physics.geo-ph,econ.GN,eess.ET,econ.EM,eess.IV,q-bio.PE,q-bio.QM,stat.AP",
-    ).split(",")
+    # ArXiv categories to search (from config or env var)
+    categories = get_list_config("arxiv_categories", config_path, [
+        "physics.app-ph", "physics.geo-ph", "econ.GN", "eess.ET",
+        "econ.EM", "eess.IV", "q-bio.PE", "q-bio.QM", "stat.AP"
+    ])
 
     papers = []
-    max_results_per_category = 100
+    max_results_per_category = get_int_config("max_results_per_category", config_path, 100)
 
     # Format date for ArXiv API (YYYYMMDD format)
     cutoff_date_str = cutoff_date.strftime("%Y%m%d")
     current_date_str = datetime.now(tz=UTC).strftime("%Y%m%d")
 
     for category in categories:
-        category = category.strip()
+        if isinstance(category, str):
+            category = category.strip()
+        else:
+            category = str(category).strip()
         # Build ArXiv API query
         # Search for papers submitted in the date range
         query = f"cat:{category} AND submittedDate:[{cutoff_date_str}* TO {current_date_str}*]"
@@ -174,7 +182,6 @@ def get_recent_papers():
 
 
 if __name__ == "__main__":
-    load_dotenv()
     papers = get_recent_papers()
 
     result = [

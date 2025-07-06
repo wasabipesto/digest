@@ -4,6 +4,14 @@
 # Output must be in valid JSON printed to stdout.
 loader = "sources/producthunt/producthunt.py"
 
+# ProductHunt-specific configuration
+# Minimum votes required to include a product
+min_votes = 200
+
+# Minimum score for email inclusion
+# min_email_score = 70
+
+# Prompt overrides
 introduction = """
 Today you will be evaluating a new product launch from Product Hunt. The most interesting products are innovative, solve real problems, have strong execution, and represent genuine market opportunities. These products have received significant community validation (minimum 300 votes) and include user comments and reviews. You will be able to read the product name, tagline, description, community feedback, and other details to determine if this would be worth investigating further.
 """

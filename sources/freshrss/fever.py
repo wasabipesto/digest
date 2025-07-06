@@ -2,7 +2,7 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
-#     "dotenv",
+#     "toml",
 #     "requests",
 #     "bs4",
 # ]
@@ -17,10 +17,16 @@
 import os
 import json
 import requests
-from dotenv import load_dotenv
 from datetime import datetime, timedelta, UTC
 import itertools
 from bs4 import BeautifulSoup
+from pathlib import Path
+import sys
+
+# Add parent directory to path to import utils
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from utils.config import get_config_value, get_int_config
+config_path = Path(f"sources/freshrss/config.toml")
 
 
 def get_date(item):
@@ -30,14 +36,14 @@ def get_date(item):
 
 def filter_by_date(item):
     """Keep items that are unread and newer than the cutoff date."""
-    lookback_days = int(os.getenv("LOOKBACK_DAYS", 7))
+    lookback_days = get_int_config("lookback_days", config_path, 7)
     cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
     return get_date(item) > cutoff_date and item["is_read"] == 0
 
 
 def get_recent_unread_feed_items():
-    fever_base_url = os.getenv("FEVER_API_BASE")
-    fever_api_key = os.getenv("FEVER_API_KEY")
+    fever_base_url = get_config_value("FEVER_API_BASE", config_path)
+    fever_api_key = get_config_value("FEVER_API_KEY", config_path)
 
     unread_item_ids = (
         requests.post(
@@ -52,7 +58,8 @@ def get_recent_unread_feed_items():
     )
 
     all_items = []
-    for chunk in itertools.batched(unread_item_ids, 50):
+    batch_size = get_int_config("batch_size", config_path, 50)
+    for chunk in itertools.batched(unread_item_ids, batch_size):
         items = (
             requests.post(
                 fever_base_url + "&items",
@@ -76,7 +83,6 @@ def clean_html(input):
 
 
 if __name__ == "__main__":
-    load_dotenv()
     feed_items = get_recent_unread_feed_items()
 
     result = []

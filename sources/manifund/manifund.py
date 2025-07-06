@@ -2,7 +2,7 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
-#     "dotenv",
+#     "toml",
 #     "requests",
 # ]
 # ///
@@ -17,9 +17,14 @@
 import os
 import json
 import requests
-from dotenv import load_dotenv
 from datetime import datetime, timedelta, UTC
+from pathlib import Path
+import sys
 
+# Add parent directory to path to import utils
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from utils.config import get_config_value, get_int_config
+config_path = Path(f"sources/manifund/config.toml")
 
 def get_date(item):
     """Get the item's creation date."""
@@ -29,7 +34,7 @@ def get_date(item):
 
 
 def filter_by_date(item):
-    lookback_days = int(os.getenv("LOOKBACK_DAYS", 7))
+    lookback_days = get_int_config("lookback_days", config_path, 7)
     cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
     item_date = get_date(item)
     return item_date > cutoff_date
@@ -42,15 +47,19 @@ def get_recent_items(endpoint):
 
     Args:
         endpoint: API endpoint name (e.g., 'projects', 'comments')
-        lookback_days: Number of days to look back
 
     Returns:
         List of items matching the date criteria
     """
+    source_name = "manifund"
     recent_items = []
     before_param = None
-    lookback_days = int(os.getenv("LOOKBACK_DAYS", 7))
+    lookback_days = get_int_config("lookback_days", config_path, 7)
     cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
+    max_projects = get_int_config("max_projects", config_path, 100)
+
+    # Track how many items we've processed to avoid infinite loops
+    items_processed = 0
 
     while True:
         # Build URL with optional before parameter
@@ -64,6 +73,11 @@ def get_recent_items(endpoint):
 
         # If no items returned, we're done
         if not batch_items:
+            break
+
+        # Check if we've processed enough items (safety limit)
+        items_processed += len(batch_items)
+        if items_processed > max_projects:
             break
 
         # Filter items to only include those within our date range
@@ -105,9 +119,6 @@ def link_comments(projects, comments):
 
 
 if __name__ == "__main__":
-    # Get config
-    load_dotenv()
-
     # Fetch recent projects and comments
     projects = get_recent_items("projects")
     comments = get_recent_items("comments")

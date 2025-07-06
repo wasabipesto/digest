@@ -2,6 +2,7 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
+#     "toml",
 #     "dotenv",
 #     "requests",
 # ]
@@ -13,52 +14,41 @@
 # Uses the ProductHunt GraphQL API v2
 # Documentation: https://api.producthunt.com/v2/docs
 
-# Required environment variables:
-# - PRODUCTHUNT_API_TOKEN: Your ProductHunt API token (get from https://api.producthunt.com/v2/docs)
-# - LOOKBACK_DAYS: Number of days to look back (default: 7)
-# - PRODUCTHUNT_MIN_VOTES: Minimum votes to include a product (default: 200)
-
 import os
 import json
 import requests
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, UTC
 import sys
+from pathlib import Path
+
+# Add parent directory to path to import utils
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from utils.config import get_config_value, get_int_config
+config_path = Path(f"sources/producthunt/config.toml")
 
 
 def get_date(item):
     """Extract the creation date from a ProductHunt post."""
-    # ProductHunt posts have a createdAt field
     return datetime.fromisoformat(item["createdAt"].replace("Z", "+00:00"))
 
 
 def filter_by_date(item):
     """Keep items that are newer than the cutoff date."""
-    lookback_days = int(os.getenv("LOOKBACK_DAYS", 7))
+    lookback_days = get_int_config("lookback_days", config_path, 7)
     cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
     return get_date(item) > cutoff_date
 
 
 def get_recent_posts():
     """Downloads recent posts from ProductHunt using GraphQL API"""
-
-    # Get API token from environment
-    api_token = os.getenv("PRODUCTHUNT_API_TOKEN")
-    if not api_token:
-        print(
-            "Error: PRODUCTHUNT_API_TOKEN environment variable not set", file=sys.stderr
-        )
-        print(
-            "Please get your API token from https://api.producthunt.com/v2/docs",
-            file=sys.stderr,
-        )
-        return []
-
-    lookback_days = int(os.getenv("LOOKBACK_DAYS", 7))
+    api_token = get_config_value("PRODUCTHUNT_API_TOKEN", config_path)
+    lookback_days = get_int_config("lookback_days", config_path, 7)
     cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
 
-    # Get minimum vote threshold from environment
-    min_votes = int(os.getenv("PRODUCTHUNT_MIN_VOTES", 200))
+    # Get minimum vote threshold from config
+    min_votes = get_int_config("min_votes", config_path, 200)
+
     # GraphQL API endpoint
     url = "https://api.producthunt.com/v2/api/graphql"
 

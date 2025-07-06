@@ -59,7 +59,10 @@ def run_data_loader(loader_path: str) -> List[Dict[str, Any]]:
             cwd=Path.cwd(),
         )
 
-        # Parse JSON output
+        # Pass through stderr
+        [print(l) for l in result.stderr.splitlines() if l.strip() != ""]
+
+        # Parse JSON output from stdout
         data = json.loads(result.stdout)
         return data if isinstance(data, list) else [data]
 
@@ -255,14 +258,14 @@ def main():
             for i in data_items:
                 i["config_path"] = str(config_path)
 
-            print(f"Collected {len(data_items)} items from {source_name}")
+            print(f"✅ Collected {len(data_items)} items from {source_name}")
             all_new_items.extend(data_items)
 
         if not all_new_items:
-            print("No new data collected.")
+            print("⭕ No new data downloaded.")
             return
 
-        print(f"\nTotal items collected: {len(all_new_items)}")
+        print(f"\nTotal items downloaded: {len(all_new_items)}")
 
         # Deduplicate new items
         print("Deduplicating items...")

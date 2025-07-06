@@ -4,6 +4,26 @@
 # Output must be in valid JSON printed to stdout.
 loader = "sources/arxiv/arxiv.py"
 
+# ArXiv-specific configuration
+arxiv_categories = [
+    "physics.app-ph",
+    "physics.geo-ph",
+    "econ.GN",
+    "eess.ET",
+    "econ.EM",
+    "eess.IV",
+    "q-bio.PE",
+    "q-bio.QM",
+    "stat.AP"
+]
+
+# Maximum results per category
+max_results_per_category = 100
+
+# Minimum score for email inclusion
+# min_email_score = 70
+
+# Prompt overrides
 introduction = """
 Today you will be evaluating a new paper from arXiv. The best papers are very interesting, with original research and well-thought out ideas. You will be able to read the abstract, and it is your job to determine if it would be worth my time to read the full paper.
 """
