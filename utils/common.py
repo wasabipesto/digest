@@ -7,7 +7,6 @@ API calls, and other common tasks used across the digest system.
 """
 
 import json
-import os
 import sys
 import time
 import hashlib
@@ -15,6 +14,7 @@ import requests
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from datetime import datetime
+from utils.config import get_config_value, get_int_config
 
 
 def load_json_file(file_path: str) -> List[Dict[str, Any]]:
@@ -73,7 +73,7 @@ def load_json_file_safe(file_path: str) -> List[Dict[str, Any]]:
         return []
 
 
-def call_ollama(prompt: str, model: Optional[str] = None, base_url: Optional[str] = None) -> Dict[str, Any]:
+def call_ollama(item: Dict[str, Any], prompt: str) -> Dict[str, Any]:
     """
     Call ollama with the prompt and return the response.
 
@@ -89,10 +89,22 @@ def call_ollama(prompt: str, model: Optional[str] = None, base_url: Optional[str
         RuntimeError: If ollama fails to respond after max retries
         ValueError: If the response doesn't contain required fields
     """
-    ollama_base_url = base_url or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    ollama_model = model or os.getenv("OLLAMA_MODEL", "llama3.2")
-    max_retries = int(os.getenv("OLLAMA_RETRIES", "3"))
+    config_path = item["config_path"]
+    ollama_base_url = get_config_value(
+        "OLLAMA_BASE_URL", config_path, "http://localhost:11434"
+    )
+    ollama_model = get_config_value("eval_model", config_path, "llama3.2")
+    max_retries = get_int_config("eval_model", config_path, 3)
 
+    # Initialize the eval data
+    eval_data = {
+        "model": ollama_model,
+        "prompt": prompt,
+        "prompt_hash": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+        "eval_date": get_current_timestamp(),
+    }
+
+    # Set the reuired keys
     required_keys = {"summary", "evaluation", "importance_score", "confidence_score"}
 
     for attempt in range(max_retries):
@@ -112,7 +124,9 @@ def call_ollama(prompt: str, model: Optional[str] = None, base_url: Optional[str
             response_json = json.loads(response_text)
 
             # Check if response has all required keys
-            if isinstance(response_json, dict) and required_keys.issubset(response_json.keys()):
+            if isinstance(response_json, dict) and required_keys.issubset(
+                response_json.keys()
+            ):
                 if not isinstance(response_json["importance_score"], int):
                     print(
                         f"Attempt {attempt + 1}: Importance score ({response_json['importance_score']}) should be a number",
@@ -127,7 +141,8 @@ def call_ollama(prompt: str, model: Optional[str] = None, base_url: Optional[str
                     continue
 
                 # All keys are present and numbers are numbers
-                return response_json
+                eval_data["response"] = response_json
+                return eval_data
             else:
                 missing_keys = required_keys - set(
                     response_json.keys() if isinstance(response_json, dict) else []
@@ -198,7 +213,9 @@ def ensure_directory_exists(file_path: str) -> None:
     directory.mkdir(parents=True, exist_ok=True)
 
 
-def run_subprocess_with_json_output(command: List[str], cwd: Optional[str] = None) -> List[Dict[str, Any]]:
+def run_subprocess_with_json_output(
+    command: List[str], cwd: Optional[str] = None
+) -> List[Dict[str, Any]]:
     """
     Run a subprocess and parse its JSON output.
 
@@ -238,6 +255,8 @@ def run_subprocess_with_json_output(command: List[str], cwd: Optional[str] = Non
         print(f"stderr: {e.stderr}", file=sys.stderr)
         raise
     except json.JSONDecodeError as e:
-        print(f"Error parsing JSON from command {' '.join(command)}: {e}", file=sys.stderr)
+        print(
+            f"Error parsing JSON from command {' '.join(command)}: {e}", file=sys.stderr
+        )
         print(f"stdout: {result.stdout}", file=sys.stderr)
         raise

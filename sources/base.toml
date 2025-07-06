@@ -14,6 +14,7 @@ min_email_score = 70
 # Provider/model to use for evaluations
 eval_provider = "ollama"
 eval_model = "llama3.2"
+eval_retries = 3
 
 # Overall prompt assembly order will be:
 #   - Header

@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 
 import argparse
-import hashlib
 import os
 import sys
 import json
 import numpy as np
 from typing import Dict, List, Any
 from utils import (
+    get_config_value,
     assemble_prompt,
     is_item_recent,
     needs_evaluation,
     load_json_file,
     save_json_file,
     call_ollama,
-    get_current_timestamp,
 )
 
 
@@ -119,27 +118,23 @@ def main():
                 )
 
                 try:
-                    # Initialize the eval data
-                    eval_data = {}
-
                     # Assemble the prompt
                     prompt = assemble_prompt(item)
-                    eval_data["prompt"] = prompt
-
-                    # Calculate and store some eval data
-                    prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
-                    eval_data["model"] = os.getenv("OLLAMA_MODEL", "llama3.2")
-                    eval_data["prompt_hash"] = prompt_hash
-                    eval_data["eval_date"] = get_current_timestamp()
-                    eval_data["round"] = round_num
 
                     # Run through ollama
-                    response = call_ollama(prompt)
-                    eval_data["response"] = response
+                    eval_provider = get_config_value(
+                        "eval_provider", item["config_path"], "ollama"
+                    )
+                    if eval_provider == "ollama":
+                        eval_data = call_ollama(item, prompt)
+                    else:
+                        raise ValueError(f"Unknown eval provider: {eval_provider}")
+
                     round_evaluated += 1
                     total_evaluated += 1
 
                     # Save and aggregate evals so far
+                    eval_data["round"] = round_num
                     item["evals"].append(eval_data)
                     item["num_evals"] += 1
                     item["weighted_score"] = weighted_score(item["evals"])
