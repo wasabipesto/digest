@@ -14,7 +14,7 @@ import requests
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from datetime import datetime
-from utils.config import get_config_value, get_int_config
+from utils.config import get_config_value, get_config_int
 
 
 def load_json_file(file_path: str) -> List[Dict[str, Any]]:
@@ -94,7 +94,7 @@ def call_ollama(item: Dict[str, Any], prompt: str) -> Dict[str, Any]:
         "OLLAMA_BASE_URL", config_path, "http://localhost:11434"
     )
     ollama_model = get_config_value("eval_model", config_path, "llama3.2")
-    max_retries = get_int_config("eval_model", config_path, 3)
+    max_retries = get_config_int("eval_model", config_path, 3)
 
     # Initialize the eval data
     eval_data = {

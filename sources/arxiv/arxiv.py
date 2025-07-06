@@ -15,18 +15,18 @@ from pathlib import Path
 
 # Add parent directory to path to import utils
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from utils.config import get_int_config, get_list_config
+from utils.config import get_config_int, get_config_list
 
 config_path = Path("sources/arxiv/config.toml")
 
 
 def get_recent_papers():
     """Downloads recent papers from Arxiv"""
-    lookback_days = get_int_config("lookback_days", config_path, 7)
+    lookback_days = get_config_int("lookback_days", config_path, 7)
     cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
 
     # ArXiv categories to search (from config or env var)
-    categories = get_list_config(
+    categories = get_config_list(
         "arxiv_categories",
         config_path,
         [
@@ -43,7 +43,7 @@ def get_recent_papers():
     )
 
     papers = []
-    max_results_per_category = get_int_config(
+    max_results_per_category = get_config_int(
         "max_results_per_category", config_path, 100
     )
 

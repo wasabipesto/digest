@@ -16,7 +16,7 @@ from readability import Document
 
 # Add parent directory to path to import utils
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from utils.config import get_config_value, get_int_config
+from utils.config import get_config_value, get_config_int
 
 config_path = Path("sources/freshrss/config.toml")
 
@@ -28,7 +28,7 @@ def get_date(item):
 
 def filter_by_date(item):
     """Keep items that are unread and newer than the cutoff date."""
-    lookback_days = get_int_config("lookback_days", config_path, 7)
+    lookback_days = get_config_int("lookback_days", config_path, 7)
     cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
     return get_date(item) > cutoff_date and item["is_read"] == 0
 
@@ -50,7 +50,7 @@ def get_recent_unread_feed_items():
     )
 
     all_items = []
-    batch_size = get_int_config("batch_size", config_path, 50)
+    batch_size = get_config_int("batch_size", config_path, 50)
     for chunk in itertools.batched(unread_item_ids, batch_size):
         items = (
             requests.post(
@@ -147,7 +147,7 @@ def fetch_full_content(url):
 
 if __name__ == "__main__":
     feed_items = get_recent_unread_feed_items()
-    min_word_count = get_int_config("min_word_count", config_path, 50)
+    min_word_count = get_config_int("min_word_count", config_path, 50)
 
     result = []
     for item in feed_items:

@@ -16,7 +16,7 @@ import sys
 
 # Add parent directory to path to import utils
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from utils.config import get_int_config
+from utils.config import get_config_int
 
 config_path = Path("sources/manifold-comment/config.toml")
 
@@ -36,9 +36,9 @@ def get_comments():
     Get comments from Manifold's database with a minimum number of likes.
     Manifold comments API doesn't allow filtering by likes so we use the Supabase connection instead.
     """
-    min_likes = get_int_config("min_likes", config_path, 15)
-    max_comments = get_int_config("max_comments", config_path, 200)
-    lookback_days = get_int_config("lookback_days", config_path, 7)
+    min_likes = get_config_int("min_likes", config_path, 15)
+    max_comments = get_config_int("max_comments", config_path, 200)
+    lookback_days = get_config_int("lookback_days", config_path, 7)
     cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
 
     supabase_anon_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4aWRyZ2thdHVtbHZmcWF4Y2xsIiwicm9sZSI6ImFub24iLCJpYXQiOjE2Njg5OTUzOTgsImV4cCI6MTk4NDU3MTM5OH0.d_yYtASLzAoIIGdXUBIgRAGLBnNow7JG2SoaNMQ8ySg"

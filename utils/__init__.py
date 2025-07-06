@@ -8,9 +8,9 @@ data processing, and other common functionality used across the digest system.
 from .config import (
     get_config_value,
     get_config,
-    get_int_config,
-    get_float_config,
-    get_list_config,
+    get_config_int,
+    get_config_float,
+    get_config_list,
 )
 
 from .common import (
@@ -38,9 +38,9 @@ from .analysis import (
 __all__ = [
     "get_config_value",
     "get_config",
-    "get_int_config",
-    "get_float_config",
-    "get_list_config",
+    "get_config_int",
+    "get_config_float",
+    "get_config_list",
     "load_json_file",
     "save_json_file",
     "load_json_file_safe",

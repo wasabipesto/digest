@@ -12,7 +12,7 @@ import time
 
 # Add parent directory to path to import utils
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from utils.config import get_config_value, get_int_config
+from utils.config import get_config_value, get_config_int
 
 config_path = Path("sources/github-feed/config.toml")
 
@@ -197,9 +197,9 @@ def get_recent_feed_items():
         print("Error: GITHUB_TOKEN not found in config or environment", file=sys.stderr)
         sys.exit(1)
 
-    lookback_days = get_int_config("lookback_days", config_path, 7)
-    max_repos = get_int_config("max_repos", config_path, 30)
-    min_stars = get_int_config("min_stars", config_path, 10)
+    lookback_days = get_config_int("lookback_days", config_path, 7)
+    max_repos = get_config_int("max_repos", config_path, 30)
+    min_stars = get_config_int("min_stars", config_path, 10)
 
     # Get authenticated user info
     user_info = get_authenticated_user(token)

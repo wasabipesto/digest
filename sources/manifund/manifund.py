@@ -13,7 +13,7 @@ import sys
 
 # Add parent directory to path to import utils
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from utils.config import get_int_config
+from utils.config import get_config_int
 
 config_path = Path("sources/manifund/config.toml")
 
@@ -26,7 +26,7 @@ def get_date(item):
 
 
 def filter_by_date(item):
-    lookback_days = get_int_config("lookback_days", config_path, 7)
+    lookback_days = get_config_int("lookback_days", config_path, 7)
     cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
     item_date = get_date(item)
     return item_date > cutoff_date
@@ -45,9 +45,9 @@ def get_recent_items(endpoint):
     """
     recent_items = []
     before_param = None
-    lookback_days = get_int_config("lookback_days", config_path, 7)
+    lookback_days = get_config_int("lookback_days", config_path, 7)
     cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
-    max_projects = get_int_config("max_projects", config_path, 100)
+    max_projects = get_config_int("max_projects", config_path, 100)
 
     # Track how many items we've processed to avoid infinite loops
     items_processed = 0

@@ -13,7 +13,7 @@ from pathlib import Path
 
 # Add parent directory to path to import utils
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from utils.config import get_config_value, get_int_config
+from utils.config import get_config_value, get_config_int
 
 config_path = Path("sources/producthunt/config.toml")
 
@@ -25,7 +25,7 @@ def get_date(item):
 
 def filter_by_date(item):
     """Keep items that are newer than the cutoff date."""
-    lookback_days = get_int_config("lookback_days", config_path, 7)
+    lookback_days = get_config_int("lookback_days", config_path, 7)
     cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
     return get_date(item) > cutoff_date
 
@@ -33,11 +33,11 @@ def filter_by_date(item):
 def get_recent_posts():
     """Downloads recent posts from ProductHunt using GraphQL API"""
     api_token = get_config_value("PRODUCTHUNT_API_TOKEN", config_path)
-    lookback_days = get_int_config("lookback_days", config_path, 7)
+    lookback_days = get_config_int("lookback_days", config_path, 7)
     cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
 
     # Get minimum vote threshold from config
-    min_votes = get_int_config("min_votes", config_path, 200)
+    min_votes = get_config_int("min_votes", config_path, 200)
 
     # GraphQL API endpoint
     url = "https://api.producthunt.com/v2/api/graphql"

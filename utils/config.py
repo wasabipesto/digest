@@ -97,7 +97,7 @@ def get_config(config_path) -> Dict[str, Any]:
     return merged_config
 
 
-def get_int_config(key: str, config_path, default: int = 0) -> int:
+def get_config_int(key: str, config_path, default: int = 0) -> int:
     """Get an integer configuration value with type conversion"""
     value = get_config_value(key, config_path, default)
     if isinstance(value, str):
@@ -108,7 +108,7 @@ def get_int_config(key: str, config_path, default: int = 0) -> int:
     return int(value) if value is not None else default
 
 
-def get_float_config(key: str, config_path, default: float = 0.0) -> float:
+def get_config_float(key: str, config_path, default: float = 0.0) -> float:
     """Get a float configuration value with type conversion"""
     value = get_config_value(key, config_path, default)
     if isinstance(value, str):
@@ -119,7 +119,7 @@ def get_float_config(key: str, config_path, default: float = 0.0) -> float:
     return float(value) if value is not None else default
 
 
-def get_list_config(
+def get_config_list(
     key: str, config_path, default: list = None, separator: str = ","
 ) -> list:
     """Get a list configuration value, handling both TOML arrays and comma-separated strings"""

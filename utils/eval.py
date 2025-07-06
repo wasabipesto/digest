@@ -4,7 +4,7 @@ import json
 from typing import Dict, Any
 from datetime import datetime, timedelta, timezone
 
-from utils.config import get_int_config, get_config_value, get_float_config
+from utils.config import get_config_int, get_config_value, get_config_float
 
 
 def assemble_prompt(item: Dict[str, Any]) -> str:
@@ -29,13 +29,13 @@ def assemble_prompt(item: Dict[str, Any]) -> str:
 
 def is_item_important(item: Dict[str, Any]) -> bool:
     """Check if an item meets the importance score cutoff"""
-    min_score = get_float_config("min_email_score", item["config_path"], 70.0)
+    min_score = get_config_float("min_email_score", item["config_path"], 70.0)
     return (item.get("weighted_score") or 0) >= min_score
 
 
 def is_item_recent(item: Dict[str, Any]) -> bool:
     """Check if an item was created within the lookback period"""
-    lookback_days = get_int_config("lookback_days", item["config_path"], 7)
+    lookback_days = get_config_int("lookback_days", item["config_path"], 7)
     if lookback_days <= 0:
         return True  # No date filtering
 
