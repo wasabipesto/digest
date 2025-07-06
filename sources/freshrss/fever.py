@@ -159,13 +159,14 @@ def fetch_full_content(url):
 
 if __name__ == "__main__":
     feed_items = get_recent_unread_feed_items()
+    min_word_count = get_int_config("min_word_count", config_path, 50)
 
     result = []
     for item in feed_items:
         cleaned_content = clean_html(item["html"])
 
         # Check if content is too short and fetch full page if needed
-        if count_words(cleaned_content) < 50 and item.get("url"):
+        if count_words(cleaned_content) < min_word_count and item.get("url"):
             print(
                 f"Content too short ({count_words(cleaned_content)} words), fetching full page: {item['url']}",
                 file=sys.stderr,

@@ -8,5 +8,8 @@ loader = "sources/freshrss/fever.py"
 # Batch size for fetching items
 batch_size = 50
 
+# If the feed item summary has fewer than this many words, go get the full page
+min_word_count = 50
+
 # Minimum score for email inclusion
 # min_email_score = 70

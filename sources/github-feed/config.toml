@@ -1,0 +1,49 @@
+# Configuration for the GitHub Feed data source.
+
+# Path to the data loader to use.
+# Output must be in valid JSON printed to stdout.
+loader = "sources/github-feed/github_feed.py"
+
+# GitHub-specific configuration
+# Maximum number of repositories to process
+max_repos = 30
+
+# Minimum stars required to consider a repo (optional filter)
+min_stars = 10
+
+# Minimum score for email inclusion
+# min_email_score = 70
+
+# Prompt overrides
+prompt_introduction = """
+Today you will be evaluating a GitHub repository that appeared in your feed. This could be a trending repository or one that your followed users have recently starred or forked. The repository comes with its README content for you to analyze.
+
+The most interesting repositories are those that:
+- Introduce novel solutions to real problems
+- Have high-quality documentation and clear purpose
+- Show active development and community engagement
+- Represent significant technical achievements or innovations
+- Are well-maintained and show good software engineering practices
+
+You should be particularly interested in:
+- New tools that could improve developer productivity
+- Innovative approaches to existing problems
+- Projects with strong technical merit and clear documentation
+- Repositories that demonstrate cutting-edge techniques or methodologies
+
+Consider the repository's description, star count, activity level, and especially the README content to determine if this would be worth your time to explore further.
+"""
+
+prompt_criteria = """
+As my assistant, you will now perform a thorough review of this GitHub repository.
+
+Consider:
+- The technical merit and innovation of the project
+- The quality of documentation and communication
+- The potential impact and usefulness of the project
+- The activity level and community engagement
+- Whether this represents a significant contribution to its field
+- The clarity of the project's purpose and execution
+
+Think about whether this repository would be worth bookmarking, starring, or diving deeper into. Does it solve a real problem? Is it well-executed? Would it be valuable for learning or practical use?
+"""

@@ -73,6 +73,7 @@ def needs_evaluation(item: Dict[str, Any], eval_round_num: int) -> bool:
         and high_confidence
         and (obviously_good or obviously_bad)
     ):
+        print(f"Skipping: {item['title']} (bigbrain)")
         return False
 
     # Standard mode: Only if queued
