@@ -1,15 +1,3 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.12"
-# dependencies = [
-#     "toml",
-#     "requests",
-#     "bs4",
-#     "readability-lxml",
-#     "matplotlib",
-# ]
-# ///
-
 # Downloads unread feed items from the FreshRSS Fever API
 # Formats the output correctly and prints to stdout
 

@@ -38,7 +38,7 @@ def run_data_loader(loader_path: str) -> List[Dict[str, Any]]:
 
         # Run the loader script using the common utility
         return run_subprocess_with_json_output(
-            [str(full_loader_path)], cwd=str(Path.cwd())
+            ["uv", "run", str(full_loader_path)], cwd=str(Path.cwd())
         )
 
     except Exception as e:

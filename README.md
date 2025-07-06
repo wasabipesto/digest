@@ -10,7 +10,7 @@ Digest fetches data from configured sources, assembles prompts based on my inter
 
 - [x] Easily add multiple data sources with their own configuration
   - [x] Start with a simple base configuration and refine with source-specific prompts
-  - [ ] Allow all parameters to be customized per-source
+  - [x] Allow all parameters to be customized per-source
 - [x] Use any LLM through Ollama to evaluate content against your criteria
   - [x] Extract summaries, evaluations, and confidence scores
 - [x] See all results in a simple web view
@@ -156,7 +156,7 @@ Each source has its own directory under `sources/` with the following items.
 
 The configuration file for each source must be named `config.toml`.
 
-The only required key for all sources is `loader`, which must point to an executable data loader, described below.
+The only required key for all sources is `loader`, which must point to a data loader, described below.
 
 Optionally, you can overwrite any of the prompt segments defined in the base configuration by using the same keys.
 
@@ -165,7 +165,7 @@ Some loaders have their own specific configuration variables, documented in that
 ### Data Loader
 
 Data loaders must:
-1. Be executable scripts
+1. Be python scripts with dependencies in the top-level uv
 2. Output valid JSON to stdout
 3. Return a list of items, each with at least:
    ```json

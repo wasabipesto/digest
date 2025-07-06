@@ -1,12 +1,3 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.12"
-# dependencies = [
-#     "toml",
-#     "requests",
-# ]
-# ///
-
 # Downloads recently-added projects from Manifund API
 # Downloads comments and appends them to the project data
 # Formats the output correctly and prints to stdout

@@ -1,16 +1,3 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.12"
-# dependencies = [
-#     "toml",
-#     "dotenv",
-#     "requests",
-#     "jinja2",
-#     "tiptapy",
-#     "bs4",
-# ]
-# ///
-
 # Downloads a list of comments from Manifold Markets
 # Filters based on likes and length
 # Formats the output correctly and prints to stdout

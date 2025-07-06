@@ -1,13 +1,3 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.12"
-# dependencies = [
-#     "toml",
-#     "requests",
-#     "matplotlib",
-# ]
-# ///
-
 # Downloads recent GitHub feed data (trending repos and friends' activity)
 # Looks for repos that the user hasn't starred and fetches their README
 # Formats the output correctly and prints to stdout

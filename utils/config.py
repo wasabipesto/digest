@@ -8,6 +8,7 @@ with fallback to base configuration and environment variables for secrets.
 
 import os
 import toml
+from dotenv import load_dotenv
 from pathlib import Path
 from typing import Dict, Any
 
@@ -47,6 +48,7 @@ def get_config_value(key: str, config_path, default: Any = None) -> Any:
     4. Default value
     """
     # Always check environment first for secrets
+    load_dotenv()
     env_value = os.getenv(key)
     if env_value is not None:
         return env_value

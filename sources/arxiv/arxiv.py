@@ -1,13 +1,3 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.12"
-# dependencies = [
-#     "toml",
-#     "requests",
-#     "feedparser",
-# ]
-# ///
-
 # Downloads recent papers from Arxiv
 # Formats the output correctly and prints to stdout
 
