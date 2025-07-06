@@ -10,7 +10,7 @@ from utils import (
     get_dedup_key,
     get_current_timestamp,
     run_subprocess_with_json_output,
-    load_source_config,
+    get_config_value,
 )
 
 
@@ -185,7 +185,7 @@ def main():
             print(f"\nProcessing source: {source_name}")
 
             # Fetch data by running the source's data loader
-            loader_path = load_source_config(config_path).get("loader")
+            loader_path = get_config_value("loader", config_path)
             if not loader_path:
                 print(f"No loader specified for source {source_name}")
                 continue

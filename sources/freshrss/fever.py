@@ -5,6 +5,8 @@
 #     "toml",
 #     "requests",
 #     "bs4",
+#     "readability-lxml",
+#     "matplotlib",
 # ]
 # ///
 
@@ -21,6 +23,8 @@ import itertools
 from bs4 import BeautifulSoup
 from pathlib import Path
 import sys
+import re
+from readability import Document
 
 # Add parent directory to path to import utils
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -82,12 +86,101 @@ def clean_html(input):
     return soup.get_text()
 
 
+def count_words(text):
+    """Count words in text"""
+    return len(re.findall(r"\b\w+\b", text))
+
+
+def extract_main_content(html_content):
+    """Extract main content from HTML using multiple strategies"""
+    soup = BeautifulSoup(html_content, "html.parser")
+
+    # Remove unwanted elements
+    for element in soup.find_all(
+        ["script", "style", "nav", "footer", "header", "aside"]
+    ):
+        element.decompose()
+
+    # Try semantic HTML tags first
+    for tag in ["article", "main", '[role="main"]']:
+        content = soup.select_one(tag)
+        if content:
+            return content.get_text(strip=True, separator=" ")
+
+    # Try common content class names
+    for selector in [
+        ".content",
+        ".post-content",
+        ".entry-content",
+        ".article-content",
+        ".main-content",
+    ]:
+        content = soup.select_one(selector)
+        if content:
+            return content.get_text(strip=True, separator=" ")
+
+    # Fall back to body content
+    body = soup.find("body")
+    if body:
+        return body.get_text(strip=True, separator=" ")
+
+    return soup.get_text(strip=True, separator=" ")
+
+
+def fetch_full_content(url):
+    """Fetch full page content and extract main text"""
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+
+        response = requests.get(url, headers=headers, timeout=30)
+        response.raise_for_status()
+
+        # First try readability
+        try:
+            doc = Document(response.text)
+            content = doc.summary()
+            extracted_text = clean_html(content)
+            if count_words(extracted_text) >= 50:
+                return extracted_text
+        except Exception as e:
+            print(f"Non-critical error parsing {url}: {str(e)}", file=sys.stderr)
+            pass
+
+        # Fall back to manual extraction
+        extracted_text = extract_main_content(response.text)
+        return extracted_text
+
+    except Exception as e:
+        print(f"Error fetching content from {url}: {str(e)}", file=sys.stderr)
+        return None
+
+
 if __name__ == "__main__":
     feed_items = get_recent_unread_feed_items()
 
     result = []
     for item in feed_items:
-        item["html"] = clean_html(item["html"])
+        cleaned_content = clean_html(item["html"])
+
+        # Check if content is too short and fetch full page if needed
+        if count_words(cleaned_content) < 50 and item.get("url"):
+            print(
+                f"Content too short ({count_words(cleaned_content)} words), fetching full page: {item['url']}",
+                file=sys.stderr,
+            )
+            full_content = fetch_full_content(item["url"])
+            if full_content and count_words(full_content) > count_words(
+                cleaned_content
+            ):
+                cleaned_content = full_content
+                print(
+                    f"Successfully fetched full content ({count_words(full_content)} words)",
+                    file=sys.stderr,
+                )
+
+        item["html"] = cleaned_content
         result.append(
             {
                 "source": "FreshRSS",
