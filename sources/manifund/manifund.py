@@ -14,7 +14,6 @@
 # Uses the Manifund API, documented here:
 # https://manifund.org/docs
 
-import os
 import json
 import requests
 from datetime import datetime, timedelta, UTC
@@ -23,8 +22,10 @@ import sys
 
 # Add parent directory to path to import utils
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from utils.config import get_config_value, get_int_config
-config_path = Path(f"sources/manifund/config.toml")
+from utils.config import get_int_config
+
+config_path = Path("sources/manifund/config.toml")
+
 
 def get_date(item):
     """Get the item's creation date."""
@@ -51,7 +52,6 @@ def get_recent_items(endpoint):
     Returns:
         List of items matching the date criteria
     """
-    source_name = "manifund"
     recent_items = []
     before_param = None
     lookback_days = get_int_config("lookback_days", config_path, 7)

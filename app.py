@@ -18,9 +18,15 @@ DEBUG = True
 
 
 @app.route("/")
-def index():
-    """Serve the main digest results viewer page."""
-    return render_template("index.html")
+def home():
+    """Serve the main home page with task list."""
+    return render_template("home.html")
+
+
+@app.route("/results")
+def results():
+    """Serve the digest results viewer page."""
+    return render_template("results.html")
 
 
 @app.route("/api/data")

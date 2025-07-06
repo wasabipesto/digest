@@ -46,15 +46,6 @@ def run_data_loader(loader_path: str) -> List[Dict[str, Any]]:
         return []
 
 
-def merge_configs(
-    base_config: Dict[str, Any], source_config: Dict[str, Any]
-) -> Dict[str, Any]:
-    """Merge base config with source config, source config takes precedence"""
-    merged = base_config.copy()
-    merged.update(source_config)
-    return merged
-
-
 def deduplicate_items(all_items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Remove duplicate items based on dedup key"""
     seen_keys: Set[str] = set()

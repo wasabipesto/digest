@@ -15,7 +15,6 @@
 # https://info.arxiv.org/help/api/index.html
 # https://arxiv.org/category_taxonomy
 
-import os
 import json
 import requests
 import feedparser
@@ -26,8 +25,9 @@ from pathlib import Path
 
 # Add parent directory to path to import utils
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from utils.config import get_config_value, get_int_config, get_list_config
-config_path = Path(f"sources/arxiv/config.toml")
+from utils.config import get_int_config, get_list_config
+
+config_path = Path("sources/arxiv/config.toml")
 
 
 def get_recent_papers():
@@ -36,13 +36,26 @@ def get_recent_papers():
     cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
 
     # ArXiv categories to search (from config or env var)
-    categories = get_list_config("arxiv_categories", config_path, [
-        "physics.app-ph", "physics.geo-ph", "econ.GN", "eess.ET",
-        "econ.EM", "eess.IV", "q-bio.PE", "q-bio.QM", "stat.AP"
-    ])
+    categories = get_list_config(
+        "arxiv_categories",
+        config_path,
+        [
+            "physics.app-ph",
+            "physics.geo-ph",
+            "econ.GN",
+            "eess.ET",
+            "econ.EM",
+            "eess.IV",
+            "q-bio.PE",
+            "q-bio.QM",
+            "stat.AP",
+        ],
+    )
 
     papers = []
-    max_results_per_category = get_int_config("max_results_per_category", config_path, 100)
+    max_results_per_category = get_int_config(
+        "max_results_per_category", config_path, 100
+    )
 
     # Format date for ArXiv API (YYYYMMDD format)
     cutoff_date_str = cutoff_date.strftime("%Y%m%d")
@@ -53,6 +66,7 @@ def get_recent_papers():
             category = category.strip()
         else:
             category = str(category).strip()
+
         # Build ArXiv API query
         # Search for papers submitted in the date range
         query = f"cat:{category} AND submittedDate:[{cutoff_date_str}* TO {current_date_str}*]"

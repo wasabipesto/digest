@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Digest Results Viewer</title>
+        <title>Digest Results Dashboard</title>
         <style>
             * {
                 margin: 0;
@@ -320,8 +320,15 @@
     <body>
         <div class="container">
             <div class="header">
-                <h1>Digest Results Viewer</h1>
+                <h1>Digest Results Dashboard</h1>
                 <p>Interactive dashboard for reviewing digest evaluations</p>
+                <p>
+                    <a
+                        href="/"
+                        style="color: #ecf0f1; text-decoration: underline"
+                        >← Back to Home</a
+                    >
+                </p>
             </div>
 
             <div class="controls">
@@ -351,16 +358,6 @@
                         oninput="applyFilters()"
                     />
                 </div>
-                <div class="control-group">
-                    <label for="limitFilter">Show:</label>
-                    <select id="limitFilter" onchange="applyFilters()">
-                        <option value="50">50 items</option>
-                        <option value="100">100 items</option>
-                        <option value="250">250 items</option>
-                        <option value="500">500 items</option>
-                        <option value="">All items</option>
-                    </select>
-                </div>
             </div>
 
             <div class="stats" id="stats">
@@ -386,7 +383,10 @@
                 <table>
                     <thead>
                         <tr>
-                            <th class="sortable" onclick="sortTable('weighted_score')">
+                            <th
+                                class="sortable"
+                                onclick="sortTable('weighted_score')"
+                            >
                                 Score
                             </th>
                             <th class="sortable" onclick="sortTable('source')">
@@ -395,13 +395,22 @@
                             <th class="sortable" onclick="sortTable('title')">
                                 Title
                             </th>
-                            <th class="sortable" onclick="sortTable('num_evals')">
+                            <th
+                                class="sortable"
+                                onclick="sortTable('num_evals')"
+                            >
                                 Evals
                             </th>
-                            <th class="sortable" onclick="sortTable('median_confidence')">
+                            <th
+                                class="sortable"
+                                onclick="sortTable('median_confidence')"
+                            >
                                 Confidence
                             </th>
-                            <th class="sortable" onclick="sortTable('last_eval')">
+                            <th
+                                class="sortable"
+                                onclick="sortTable('last_eval')"
+                            >
                                 Last Eval
                             </th>
                             <th>Link</th>
@@ -422,7 +431,9 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h3 id="modalTitle">Item Details</h3>
-                    <button class="close" onclick="closeModal()">&times;</button>
+                    <button class="close" onclick="closeModal()">
+                        &times;
+                    </button>
                 </div>
                 <div class="modal-body" id="modalBody">
                     <div class="loading">Loading details...</div>
@@ -456,9 +467,7 @@
                     applyFilters();
                     updateStats();
                 } catch (error) {
-                    showError(
-                        `Failed to load digest data: ${error.message}`,
-                    );
+                    showError(`Failed to load digest data: ${error.message}`);
                 }
             }
 
@@ -485,31 +494,24 @@
                 const searchTerm = document
                     .getElementById("search")
                     .value.toLowerCase();
-                const sourceFilter = document.getElementById("sourceFilter").value;
-                const scoreFilter = parseInt(
-                    document.getElementById("scoreFilter").value,
-                ) || 0;
-                const limitFilter = parseInt(
-                    document.getElementById("limitFilter").value,
-                ) || 0;
+                const sourceFilter =
+                    document.getElementById("sourceFilter").value;
+                const scoreFilter =
+                    parseInt(document.getElementById("scoreFilter").value) || 0;
 
                 filteredData = digestData.filter((item) => {
                     const matchesSearch =
                         !searchTerm ||
                         item.title.toLowerCase().includes(searchTerm);
-                    const matchesSource = !sourceFilter || item.source === sourceFilter;
-                    const matchesScore = (item.weighted_score || 0) >= scoreFilter;
+                    const matchesSource =
+                        !sourceFilter || item.source === sourceFilter;
+                    const matchesScore =
+                        (item.weighted_score || 0) >= scoreFilter;
 
                     return matchesSearch && matchesSource && matchesScore;
                 });
 
                 sortData();
-
-                // Apply limit
-                if (limitFilter > 0) {
-                    filteredData = filteredData.slice(0, limitFilter);
-                }
-
                 renderTable();
                 updateStats();
             }
@@ -591,12 +593,16 @@
 
             function updateStats() {
                 const total = filteredData.length;
-                const high = filteredData.filter(item => (item.weighted_score || 0) >= 70).length;
-                const medium = filteredData.filter(item => {
+                const high = filteredData.filter(
+                    (item) => (item.weighted_score || 0) >= 70,
+                ).length;
+                const medium = filteredData.filter((item) => {
                     const score = item.weighted_score || 0;
                     return score >= 30 && score < 70;
                 }).length;
-                const low = filteredData.filter(item => (item.weighted_score || 0) < 30).length;
+                const low = filteredData.filter(
+                    (item) => (item.weighted_score || 0) < 30,
+                ).length;
 
                 document.getElementById("totalItems").textContent = total;
                 document.getElementById("highScore").textContent = high;
@@ -609,31 +615,33 @@
                 const modalBody = document.getElementById("modalBody");
                 const modalTitle = document.getElementById("modalTitle");
 
-                modalBody.innerHTML = '<div class="loading">Loading details...</div>';
+                modalBody.innerHTML =
+                    '<div class="loading">Loading details...</div>';
                 modal.style.display = "block";
 
                 try {
                     const response = await fetch(`/api/item/${dedupKey}`);
                     if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        throw new Error(
+                            `HTTP ${response.status}: ${response.statusText}`,
+                        );
                     }
                     const item = await response.json();
 
                     modalTitle.textContent = item.title;
 
                     let html = `
-                        <div class="detail-section">
-                            <h4>Basic Information</h4>
-                            <div class="detail-content">
-                                <strong>Source:</strong> ${item.source}
-                                <strong>Link:</strong> <a href="${item.link}" target="_blank">${item.link}</a>
-                                <strong>Dedup Key:</strong> ${item.dedup_key}
-                                <strong>Weighted Score:</strong> ${item.weighted_score || 0}
-                                <strong>Number of Evaluations:</strong> ${item.num_evals || 0}
-                                <strong>Median Confidence:</strong> ${item.median_confidence || 0}
-                                <strong>Last Evaluated:</strong> ${item.last_eval ? new Date(item.last_eval).toLocaleString() : "Never"}
-                            </div>
-                        </div>
+<div class="detail-section">
+<h4>Basic Information</h4>
+<div class="detail-content">
+<strong>Source:</strong> ${item.source}
+<strong>Link:</strong> <a href="${item.link}" target="_blank">${item.link}</a>
+<strong>Weighted Score:</strong> ${item.weighted_score || 0}
+<strong>Median Confidence:</strong> ${item.median_confidence || 0}
+<strong>Number of Evaluations:</strong> ${item.num_evals || 0}
+<strong>Last Evaluated:</strong> ${item.last_eval ? new Date(item.last_eval).toLocaleString() : "Never"}
+</div>
+</div>
                     `;
 
                     if (item.input) {
@@ -692,20 +700,27 @@
             function sortTable(field) {
                 // Update sort state
                 if (currentSort.field === field) {
-                    currentSort.direction = currentSort.direction === "asc" ? "desc" : "asc";
+                    currentSort.direction =
+                        currentSort.direction === "asc" ? "desc" : "asc";
                 } else {
                     currentSort.field = field;
                     currentSort.direction = "desc";
                 }
 
                 // Update UI
-                document.querySelectorAll("th").forEach(th => {
+                document.querySelectorAll("th").forEach((th) => {
                     th.classList.remove("sort-asc", "sort-desc");
                 });
 
-                const header = document.querySelector(`th[onclick="sortTable('${field}')"]`);
+                const header = document.querySelector(
+                    `th[onclick="sortTable('${field}')"]`,
+                );
                 if (header) {
-                    header.classList.add(currentSort.direction === "asc" ? "sort-asc" : "sort-desc");
+                    header.classList.add(
+                        currentSort.direction === "asc"
+                            ? "sort-asc"
+                            : "sort-desc",
+                    );
                 }
 
                 // Re-sort and render
@@ -714,7 +729,7 @@
             }
 
             // Close modal when clicking outside
-            window.onclick = function(event) {
+            window.onclick = function (event) {
                 const modal = document.getElementById("detailModal");
                 if (event.target === modal) {
                     closeModal();

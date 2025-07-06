@@ -12,6 +12,6 @@ min_votes = 200
 # min_email_score = 70
 
 # Prompt overrides
-introduction = """
+prompt_introduction = """
 Today you will be evaluating a new product launch from Product Hunt. The most interesting products are innovative, solve real problems, have strong execution, and represent genuine market opportunities. These products have received significant community validation (minimum 300 votes) and include user comments and reviews. You will be able to read the product name, tagline, description, community feedback, and other details to determine if this would be worth investigating further.
 """

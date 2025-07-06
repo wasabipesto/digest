@@ -2,47 +2,12 @@ import json
 import os
 import argparse
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from typing import Dict, List, Any
 import requests
 from collections import defaultdict
 import subprocess
-from pathlib import Path
-import sys
-
-# Add utils to path to import config utilities
-sys.path.insert(0, str(Path(__file__).parent))
-from utils.config import get_config_value, get_float_config, load_source_config
-
-
-def is_item_important(item: Dict[str, Any]) -> bool:
-    """Check if an item meets the importance score cutoff"""
-    min_score = get_float_config("min_email_score", item["config_path"], 70.0)
-    return (item.get("weighted_score") or 0) >= min_score
-
-
-def is_item_recent(item: Dict[str, Any]) -> bool:
-    """Check if an item was created within the lookback period"""
-    lookback_days = get_int_config("lookback_days", item["config_path"], 7)
-    if lookback_days <= 0:
-        return True  # No date filtering
-
-    try:
-        item_date_str = item.get("creation_date")
-        if not item_date_str:
-            return True  # If no date info, include it
-
-        # Parse ISO format datetime
-        if item_date_str.endswith("Z"):
-            item_date_str = item_date_str[:-1] + "+00:00"
-
-        item_date = datetime.fromisoformat(item_date_str)
-        cutoff_date = datetime.now(timezone.utc) - timedelta(days=lookback_days)
-
-        return item_date >= cutoff_date
-    except (ValueError, AttributeError):
-        print(f"Failed to parse date: {item_date_str}")
-        return True  # If we can't parse the date, include it
+from utils import is_item_important, is_item_recent
 
 
 def get_item_summary(item: Dict[str, Any]) -> str:
@@ -59,40 +24,7 @@ def get_item_summary(item: Dict[str, Any]) -> str:
     return "No summary available."
 
 
-def filter_and_sort_items(
-    items: List[Dict[str, Any]]
-) -> List[Dict[str, Any]]:
-    """Filter items by date and score, then sort by weighted score"""
-    filtered_items = [
-        i
-        for i in items
-        if is_item_important(i) and is_item_recent(i)
-    ]
-
-    # Sort by weighted score (highest first)
-    return sorted(filtered_items, key=lambda x: x["weighted_score"], reverse=True)
-
-
-def group_items_by_source(
-    items: List[Dict[str, Any]],
-) -> Dict[str, List[Dict[str, Any]]]:
-    """Group items by their source"""
-    grouped = defaultdict(list)
-    for item in items:
-        source = item.get("source", "Unknown")
-        grouped[source].append(item)
-
-    return grouped
-
-
-def generate_email_subject(items: List[Dict[str, Any]]) -> str:
-    """Generates a subject line based on the number of items"""
-    return f"{len(items)} items in your weekly digest"
-
-
-def generate_html_email(
-    items: List[Dict[str, Any]]
-) -> str:
+def generate_html_email(items: List[Dict[str, Any]]) -> str:
     """Generate HTML email content"""
     if not items:
         return """
@@ -108,7 +40,10 @@ def generate_html_email(
     top_items = items[:3]
 
     # Group remaining items by source
-    grouped_items = group_items_by_source(items)
+    grouped_items = defaultdict(list)
+    for item in items:
+        source = item.get("source", "Unknown")
+        grouped_items[source].append(item)
 
     html = f"""
     <html>
@@ -270,8 +205,13 @@ def main():
     print(f"Loaded {len(digest_results)} total items")
 
     # Filter and sort items
-    print(f"Filtering items using source-specific thresholds")
-    filtered_items = filter_and_sort_items(digest_results)
+    print("Filtering items using source-specific thresholds")
+    filtered_items = [
+        i for i in digest_results if is_item_important(i) and is_item_recent(i)
+    ]
+    filtered_items = sorted(
+        filtered_items, key=lambda x: x["weighted_score"], reverse=True
+    )
     print(f"Found {len(filtered_items)} items matching criteria")
 
     if not filtered_items:
@@ -281,7 +221,7 @@ def main():
     # Generate HTML content
     print("Generating HTML content...")
     html_content = generate_html_email(filtered_items)
-    subject = generate_email_subject(filtered_items)
+    subject = f"{len(filtered_items)} items in your weekly digest"
 
     # Execute the requested action
     if args.action == "save":

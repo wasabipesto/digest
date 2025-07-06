@@ -9,7 +9,7 @@ with fallback to base configuration and environment variables for secrets.
 import os
 import toml
 from pathlib import Path
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any
 
 
 def load_base_config() -> Dict[str, Any]:
@@ -71,6 +71,7 @@ def get_config_value(key: str, config_path, default: Any = None) -> Any:
         return default
     raise ValueError(f"Configuration key '{key}' not found and no default provided")
 
+
 def get_config(config_path) -> Dict[str, Any]:
     """
     Get merged configuration for a source.
@@ -116,7 +117,9 @@ def get_float_config(key: str, config_path, default: float = 0.0) -> float:
     return float(value) if value is not None else default
 
 
-def get_list_config(key: str, config_path, default: list = None, separator: str = ",") -> list:
+def get_list_config(
+    key: str, config_path, default: list = None, separator: str = ","
+) -> list:
     """Get a list configuration value, handling both TOML arrays and comma-separated strings"""
     if default is None:
         default = []

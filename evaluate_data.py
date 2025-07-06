@@ -7,82 +7,15 @@ import sys
 import json
 import numpy as np
 from typing import Dict, List, Any
-from datetime import datetime, timedelta, UTC
 from utils import (
+    assemble_prompt,
+    is_item_recent,
+    needs_evaluation,
     load_json_file,
     save_json_file,
     call_ollama,
     get_current_timestamp,
-    load_base_config,
-    load_source_config,
 )
-
-
-def load_data(data_file: str) -> List[Dict[str, Any]]:
-    """Load data from the specified file"""
-    return load_json_file(data_file)
-
-
-def merge_configs(
-    base_config: Dict[str, Any], source_config: Dict[str, Any]
-) -> Dict[str, Any]:
-    """Merge base config with source config, source config takes precedence"""
-    merged = base_config.copy()
-    merged.update(source_config)
-    return merged
-
-
-def assemble_prompt(config: Dict[str, Any], item: Dict[str, Any]) -> str:
-    """Assemble the final prompt for an item using the config"""
-    prompt_parts = []
-
-    # Add components in the specified order
-    if "header" in config:
-        prompt_parts.append(config["header"])
-
-    if "introduction" in config:
-        prompt_parts.append(config["introduction"])
-
-    # Input container with the actual content
-    if "container_pre" in config:
-        prompt_parts.append(config["container_pre"])
-
-    # Add the actual input content
-    prompt_parts.append(item["title"])
-    prompt_parts.append(json.dumps(item["input"]))
-
-    if "container_post" in config:
-        prompt_parts.append(config["container_post"])
-
-    if "criteria" in config:
-        prompt_parts.append(config["criteria"])
-
-    if "instructions" in config:
-        prompt_parts.append(config["instructions"])
-
-    return "\n\n".join(prompt_parts)
-
-
-def needs_evaluation(item: Dict[str, Any], eval_round_num: int) -> bool:
-    """Check if an item needs evaluation for the current pass"""
-    num_evals_passed = item["num_evals"]
-    queued_to_reevaluate = num_evals_passed < eval_round_num
-    been_evaluated_a_lot = num_evals_passed > 5
-    high_confidence = item["median_confidence"] and item["median_confidence"] > 80
-    obviously_good = item["weighted_score"] and item["weighted_score"] > 80
-    obviously_bad = item["weighted_score"] and item["weighted_score"] < 20
-
-    # Big brain time: If we're confident that the item is good or bad, don't evaluate it again
-    if (
-        queued_to_reevaluate
-        and been_evaluated_a_lot
-        and high_confidence
-        and (obviously_good or obviously_bad)
-    ):
-        return False
-
-    # Standard mode: Only if queued
-    return queued_to_reevaluate
 
 
 def weighted_score(evals: List[Dict[str, Any]]) -> float:
@@ -100,26 +33,6 @@ def weighted_score(evals: List[Dict[str, Any]]) -> float:
 def median_confidence(evals: List[Dict[str, Any]]) -> float:
     """Aggregate a median confidence score from evaluations"""
     return int(np.median([e["response"]["confidence_score"] for e in evals]))
-
-
-def is_item_recent(item: Dict[str, Any], lookback_days: int) -> bool:
-    """Check if an item was created within the lookback period"""
-    if lookback_days <= 0:
-        return True  # No date filtering
-
-    try:
-        # Assuming item has a 'date' or 'created_date' field
-        item_date_str = item.get("creation_date")
-        if not item_date_str:
-            return True  # If no date info, include it
-
-        item_date = datetime.fromisoformat(item_date_str)
-        cutoff_date = datetime.now(tz=UTC) - timedelta(days=lookback_days)
-
-        return item_date >= cutoff_date
-    except (ValueError, AttributeError):
-        # If we can't parse the date, include the item
-        return True
 
 
 def main():
@@ -151,11 +64,6 @@ def main():
         type=str,
         help="Number of evaluation rounds (default from env EVAL_ROUNDS, use 'infinite' for continuous evaluation)",
     )
-    parser.add_argument(
-        "--lookback-days",
-        type=int,
-        help="Only evaluate items created within this many days (default from env LOOKBACK_DAYS, use 0 for no limit)",
-    )
     args = parser.parse_args()
 
     # Get configuration from environment or arguments
@@ -168,38 +76,19 @@ def main():
     else:
         max_rounds = int(os.getenv("EVAL_ROUNDS", "3"))
 
-    lookback_days = (
-        args.lookback_days
-        if args.lookback_days is not None
-        else int(os.getenv("LOOKBACK_DAYS", "7"))
-    )
-
-    print(
-        f"Starting evaluation process with {max_rounds if max_rounds != float('inf') else 'infinite'} rounds..."
-    )
-    print(
-        f"Lookback period: {'No limit' if lookback_days <= 0 else f'{lookback_days} days'}"
-    )
+        print(
+            f"Starting evaluation process with {max_rounds if max_rounds != float('inf') else 'infinite'} rounds..."
+        )
 
     try:
         # Load data
         print(f"Loading data from {args.input}...")
-        all_items = load_data(args.input)
+        all_items = load_json_file(args.input)
         print(f"Loaded {len(all_items)} items")
 
-        # Filter items by date if lookback_days is specified
-        if not args.force and lookback_days > 0:
-            recent_items = [
-                item for item in all_items if is_item_recent(item, lookback_days)
-            ]
-            print(
-                f"Filtered to {len(recent_items)} items created within the last {lookback_days} days"
-            )
-        else:
-            recent_items = all_items
-
-        # Get the base configuration
-        base_config = load_base_config()
+        # Filter items by recency
+        recent_items = [item for item in all_items if is_item_recent(item)]
+        print(f"Filtered to {len(recent_items)} items based on source criteria")
 
         # Run multiple evaluation rounds
         total_evaluated = 0
@@ -233,14 +122,8 @@ def main():
                     # Initialize the eval data
                     eval_data = {}
 
-                    # Get the item's source configuration
-                    source_config = load_source_config(item["config_path"])
-
-                    # Merge the base config with the current item's config
-                    config = merge_configs(base_config, source_config)
-
                     # Assemble the prompt
-                    prompt = assemble_prompt(config, item)
+                    prompt = assemble_prompt(item)
                     eval_data["prompt"] = prompt
 
                     # Calculate and store some eval data

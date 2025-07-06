@@ -14,7 +14,6 @@
 # Uses the Fever API, documented here:
 # https://freshrss.github.io/FreshRSS/en/developers/06_Fever_API.html
 
-import os
 import json
 import requests
 from datetime import datetime, timedelta, UTC
@@ -26,7 +25,8 @@ import sys
 # Add parent directory to path to import utils
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from utils.config import get_config_value, get_int_config
-config_path = Path(f"sources/freshrss/config.toml")
+
+config_path = Path("sources/freshrss/config.toml")
 
 
 def get_date(item):

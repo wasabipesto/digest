@@ -18,7 +18,6 @@
 # Partially uses the Manifold public API, documented here:
 # https://docs.manifold.markets/api
 
-import os
 import json
 import requests
 from dotenv import load_dotenv
@@ -30,8 +29,9 @@ import sys
 
 # Add parent directory to path to import utils
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from utils.config import get_config_value, get_int_config
-config_path = Path(f"sources/manifold-comment/config.toml")
+from utils.config import get_int_config
+
+config_path = Path("sources/manifold-comment/config.toml")
 
 
 def get_date(item):
@@ -57,7 +57,11 @@ def get_comments():
     supabase_anon_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4aWRyZ2thdHVtbHZmcWF4Y2xsIiwicm9sZSI6ImFub24iLCJpYXQiOjE2Njg5OTUzOTgsImV4cCI6MTk4NDU3MTM5OH0.d_yYtASLzAoIIGdXUBIgRAGLBnNow7JG2SoaNMQ8ySg"
     comments = requests.get(
         "https://pxidrgkatumlvfqaxcll.supabase.co/rest/v1/contract_comments",
-        params={"likes": f"gte.{min_likes}", "created_time": f"gte.{cutoff_date.isoformat()}", "limit": max_comments},
+        params={
+            "likes": f"gte.{min_likes}",
+            "created_time": f"gte.{cutoff_date.isoformat()}",
+            "limit": max_comments,
+        },
         headers={"apikey": supabase_anon_key},
     ).json()
     return comments

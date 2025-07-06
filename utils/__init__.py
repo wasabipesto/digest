@@ -11,8 +11,6 @@ from .config import (
     get_int_config,
     get_float_config,
     get_list_config,
-    load_base_config,
-    load_source_config,
 )
 
 from .common import (
@@ -26,14 +24,19 @@ from .common import (
     run_subprocess_with_json_output,
 )
 
+from .eval import (
+    assemble_prompt,
+    is_item_important,
+    is_item_recent,
+    needs_evaluation,
+)
+
 __all__ = [
     "get_config_value",
     "get_config",
     "get_int_config",
     "get_float_config",
     "get_list_config",
-    "load_base_config",
-    "load_source_config",
     "load_json_file",
     "save_json_file",
     "load_json_file_safe",
@@ -42,4 +45,8 @@ __all__ = [
     "get_current_timestamp",
     "ensure_directory_exists",
     "run_subprocess_with_json_output",
+    "assemble_prompt",
+    "is_item_important",
+    "is_item_recent",
+    "needs_evaluation",
 ]

@@ -14,7 +14,6 @@
 # Uses the ProductHunt GraphQL API v2
 # Documentation: https://api.producthunt.com/v2/docs
 
-import os
 import json
 import requests
 from dotenv import load_dotenv
@@ -25,7 +24,8 @@ from pathlib import Path
 # Add parent directory to path to import utils
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from utils.config import get_config_value, get_int_config
-config_path = Path(f"sources/producthunt/config.toml")
+
+config_path = Path("sources/producthunt/config.toml")
 
 
 def get_date(item):

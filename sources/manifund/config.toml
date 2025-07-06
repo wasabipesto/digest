@@ -13,11 +13,11 @@ max_projects = 100
 
 
 # Prompt overrides
-introduction = """
+prompt_introduction = """
 Today you will be evaluating a grant proposal from a site called Manifund. Projects from Manifund tend to be focused on maximizing charitable impact, addressing long-term risks, and being ready for the future. I have some money set aside to contribute to a few of these projects, and you will be helping me evaluate one such project.
 """
 
-criteria = """
+prompt_criteria = """
 As my assistant, you will now perform a thorough and insightful review of the grant proposal you just read.
 
 Some things that I prioritize for grant proposals like this include:

@@ -12,11 +12,11 @@ min_likes = 15
 # min_email_score = 70
 
 # Prompt overrides
-introduction = """
+prompt_introduction = """
 Today you will be evaluating a user comment from Manifold, a prediction market site. The best comments are very interesting, with original research or well-thought out ideas. Markets can range from politics to scientific breakthroughs, and the comments are often insightful and thought-provoking.
 """
 
-criteria = """
+prompt_criteria = """
 As my assistant, you will now perform a thorough and insightful review of the user comment you just read.
 
 Some characteristics of good comments include:

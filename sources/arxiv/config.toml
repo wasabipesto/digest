@@ -24,6 +24,6 @@ max_results_per_category = 100
 # min_email_score = 70
 
 # Prompt overrides
-introduction = """
+prompt_introduction = """
 Today you will be evaluating a new paper from arXiv. The best papers are very interesting, with original research and well-thought out ideas. You will be able to read the abstract, and it is your job to determine if it would be worth my time to read the full paper.
 """
