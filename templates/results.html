@@ -37,6 +37,30 @@
                 text-align: center;
             }
 
+            .nav {
+                background: #34495e;
+                padding: 15px 20px;
+                display: flex;
+                gap: 20px;
+                align-items: center;
+            }
+
+            .nav a {
+                color: white;
+                text-decoration: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                transition: background-color 0.3s ease;
+            }
+
+            .nav a:hover {
+                background-color: #4a5f7a;
+            }
+
+            .nav a.active {
+                background-color: #3498db;
+            }
+
             .controls {
                 padding: 20px;
                 background: #ecf0f1;
@@ -322,13 +346,12 @@
             <div class="header">
                 <h1>Digest Results Dashboard</h1>
                 <p>Interactive dashboard for reviewing digest evaluations</p>
-                <p>
-                    <a
-                        href="/"
-                        style="color: #ecf0f1; text-decoration: underline"
-                        >← Back to Home</a
-                    >
-                </p>
+            </div>
+
+            <div class="nav">
+                <a href="/">🏠 Home</a>
+                <a href="/results" class="active">📋 Results</a>
+                <a href="/analysis">📊 Analysis</a>
             </div>
 
             <div class="controls">

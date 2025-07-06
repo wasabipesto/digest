@@ -31,6 +31,10 @@ from .eval import (
     needs_evaluation,
 )
 
+from .analysis import (
+    all_plots,
+)
+
 __all__ = [
     "get_config_value",
     "get_config",
@@ -49,4 +53,5 @@ __all__ = [
     "is_item_important",
     "is_item_recent",
     "needs_evaluation",
+    "all_plots",
 ]

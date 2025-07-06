@@ -8,7 +8,7 @@ replacing the static HTML file with server-side data loading.
 
 from flask import Flask, render_template, jsonify
 from pathlib import Path
-from utils import load_json_file_safe
+from utils import load_json_file_safe, all_plots
 
 app = Flask(__name__)
 
@@ -113,6 +113,23 @@ def health_check():
             else 0,
         }
     )
+
+
+@app.route("/analysis")
+def analysis():
+    """Serve the analysis page with plots."""
+    try:
+        data = load_json_file_safe(DATA_FILE)
+        if not data:
+            return render_template(
+                "analysis.html", error="No data available for analysis", plots={}
+            )
+        return render_template("analysis.html", plots=all_plots(data), error=None)
+
+    except Exception as e:
+        return render_template(
+            "analysis.html", error=f"Error generating analysis: {str(e)}", plots={}
+        )
 
 
 if __name__ == "__main__":

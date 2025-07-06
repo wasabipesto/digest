@@ -1,15 +1,24 @@
+#!/usr/bin/env python3
+
+import matplotlib
 import matplotlib.pyplot as plt
-import os
+import base64
+import io
 from collections import defaultdict
-from utils import load_json_file
+from typing import Dict, List
 
-PLOTS_DIR = "plots"
+matplotlib.use("Agg")  # Use non-interactive backend
 
 
-def extract_items(digest_results):
+def aggregate_data(digest_results):
+    """Extract and process items from digest results."""
     all_items = []
 
     for item in digest_results:
+        # Skip those without evals
+        if item["weighted_score"] is None:
+            continue
+
         evals = [
             {
                 "prompt_hash": e["prompt_hash"],
@@ -32,7 +41,19 @@ def extract_items(digest_results):
     return all_items
 
 
-def plot_importance_eventplot(all_items, max_items_to_show=20, max_title_len=50):
+def plot_to_base64(fig):
+    """Convert matplotlib figure to base64 string."""
+    img_buffer = io.BytesIO()
+    fig.savefig(img_buffer, format="png", dpi=150, bbox_inches="tight")
+    img_buffer.seek(0)
+    img_str = base64.b64encode(img_buffer.getvalue()).decode()
+    plt.close(fig)
+    return img_str
+
+
+def create_importance_eventplot(all_items, max_items_to_show=50, max_title_len=50):
+    """Create importance score event plot."""
+    print("Generating importance event plot...")
     titles, importance_scores_lists, weighted_scores = [], [], []
     for item in all_items[-max_items_to_show:]:
         short_title = (
@@ -64,11 +85,13 @@ def plot_importance_eventplot(all_items, max_items_to_show=20, max_title_len=50)
     ax.set_title("Distribution of Importance Scores by Item")
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig(f"{PLOTS_DIR}/importance_eventplot.png", dpi=300, bbox_inches="tight")
-    plt.close(fig)
+
+    return plot_to_base64(fig)
 
 
-def plot_all_scatter(all_items):
+def create_scatter_plot(all_items):
+    """Create scatter plot of scores vs confidence by source."""
+    print("Generating scatter plot of scores...")
     scores_by_source = defaultdict(list)
     confidences_by_source = defaultdict(list)
 
@@ -97,16 +120,19 @@ def plot_all_scatter(all_items):
     ax.legend(fontsize=8)
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig(f"{PLOTS_DIR}/all_scatterplot.png", dpi=300, bbox_inches="tight")
-    plt.close(fig)
+
+    return plot_to_base64(fig)
 
 
-if __name__ == "__main__":
-    os.makedirs(PLOTS_DIR, exist_ok=True)
-    digest_results = load_json_file("digest_results.json")
-    all_items = extract_items(digest_results)
-
-    plot_importance_eventplot(all_items)
-    plot_all_scatter(all_items)
-
-    print(f"Analysis complete. Processed {len(all_items)} items.")
+def all_plots(data) -> List[Dict[str, str]]:
+    agg_data = aggregate_data(data)
+    return [
+        {
+            "title": "Importance Score Distribution",
+            "body": create_importance_eventplot(agg_data),
+        },
+        {
+            "title": "Confidence vs Importance Scores",
+            "body": create_scatter_plot(agg_data),
+        },
+    ]
