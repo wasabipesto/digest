@@ -6,7 +6,7 @@
 lookback_days = 7
 
 # Number of evaluation rounds for items
-eval_rounds = 3
+eval_rounds = 1
 
 # Minimum importance score for items to be included in email digest
 min_email_score = 70
