@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 import argparse
-import os
 import sys
 import json
 import numpy as np
 from typing import Dict, List, Any
 from utils import (
     get_config_value,
+    get_config_int,
     assemble_prompt,
     is_item_recent,
     needs_evaluation,
@@ -61,7 +61,7 @@ def main():
         "--rounds",
         "-r",
         type=str,
-        help="Number of evaluation rounds (default from env EVAL_ROUNDS, use 'infinite' for continuous evaluation)",
+        help="Number of evaluation rounds (default from config 'eval_rounds', use 'infinite' for continuous evaluation)",
     )
     args = parser.parse_args()
 
@@ -73,7 +73,7 @@ def main():
         else:
             max_rounds = int(args.rounds)
     else:
-        max_rounds = int(os.getenv("EVAL_ROUNDS", "3"))
+        max_rounds = get_config_int("eval_rounds", "base.toml", 1)
 
         print(
             f"Starting evaluation process with {max_rounds if max_rounds != float('inf') else 'infinite'} rounds..."
