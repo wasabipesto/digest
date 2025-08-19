@@ -143,7 +143,7 @@ def send_via_mailgun(html_content: str, subject: str):
     """Send email via Mailgun API"""
     mailgun_api_key = os.getenv("MAILGUN_API_KEY")
     mailgun_domain = os.getenv("MAILGUN_DOMAIN")
-    sender_email = os.getenv("SENDER_EMAIL", f"digest@{mailgun_domain}")
+    sender_email = os.getenv("MAILGUN_FROM_EMAIL")
     recipient_email = os.getenv("RECIPIENT_EMAIL")
     print(f"Sending email from {sender_email} to {recipient_email}...")
 
