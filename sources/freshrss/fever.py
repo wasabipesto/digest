@@ -12,7 +12,6 @@ from bs4 import BeautifulSoup
 from pathlib import Path
 import sys
 import re
-from readability import Document
 
 # Add parent directory to path to import utils
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -124,19 +123,6 @@ def fetch_full_content(url):
 
         response = requests.get(url, headers=headers, timeout=30)
         response.raise_for_status()
-
-        # First try readability
-        try:
-            doc = Document(response.text)
-            content = doc.summary()
-            extracted_text = clean_html(content)
-            if count_words(extracted_text) >= 50:
-                return extracted_text
-        except Exception as e:
-            print(f"Non-critical error parsing {url}: {str(e)}", file=sys.stderr)
-            pass
-
-        # Fall back to manual extraction
         extracted_text = extract_main_content(response.text)
         return extracted_text
 
