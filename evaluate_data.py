@@ -113,18 +113,22 @@ def main():
             # Process each item in this round
             round_evaluated = 0
             for i, item in enumerate(items_to_evaluate):
-                print(
-                    f"Evaluating item {i + 1}/{len(items_to_evaluate)}: {item['title']}"
-                )
-
                 try:
                     # Assemble the prompt
                     prompt = assemble_prompt(item)
 
-                    # Run through ollama
+                    # Get eval provider and model
                     eval_provider = get_config_value(
                         "eval_provider", item["config_path"], "ollama"
                     )
+                    eval_model = get_config_value(
+                        "eval_model", item["config_path"], "llama3.2"
+                    )
+                    print(
+                        f"Evaluating item {i + 1}/{len(items_to_evaluate)}: {item['source']} - {item['title']} with {eval_provider}/{eval_model}"
+                    )
+
+                    # Run through evaluator
                     if eval_provider == "ollama":
                         eval_data = call_ollama(item, prompt)
                     else:
